@@ -1,0 +1,9 @@
+{
+  "name": "rejoy-scripts",
+  "version": "1.0.0",
+  "description": "Migration scripts for Rejoy",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.0"
+  }
+}

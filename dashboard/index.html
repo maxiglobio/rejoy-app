@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rejoy Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; }
+    h1 { margin: 0 0 24px; font-size: 1.5rem; font-weight: 600; color: #333; display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+    /* Same typography as h1 (inherits size, weight, color) */
+    h1 .metric-day { font: inherit; color: inherit; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card .value { font-size: 1.75rem; font-weight: 600; color: #333; }
+    .card .label { font-size: 0.8rem; color: #666; margin-top: 4px; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+    .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .chart-card h2 { margin: 0 0 16px; font-size: 1rem; color: #333; }
+    .chart-container { position: relative; height: 280px; }
+    .error { background: #fee; color: #c00; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    .loading { color: #666; padding: 24px; }
+    .updated { font-size: 0.75rem; color: #999; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>
+    Rejoy Analytics<span id="metric-day" class="metric-day" aria-live="polite"></span>
+  </h1>
+  <script>
+    (function () {
+      // Day 1 = 3 March 2026 (UTC). Edit here if the start date changes.
+      var y = 2026, m = 3, d = 3;
+      var start = Date.UTC(y, m - 1, d);
+      var now = new Date();
+      var todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      var dayN = Math.floor((todayUTC - start) / 86400000) + 1;
+      var el = document.getElementById('metric-day');
+      if (!el) return;
+      if (dayN < 1) {
+        el.textContent = '';
+        el.removeAttribute('aria-label');
+      } else {
+        el.textContent = ' · Day ' + dayN;
+        el.setAttribute('aria-label', 'Day ' + dayN);
+      }
+    })();
+  </script>
+  <div id="error" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading…</div>
+  <div id="dashboard" style="display:none">
+    <div class="cards">
+      <div class="card"><div class="value" id="total-users">–</div><div class="label">Total users on platform</div></div>
+      <div class="card"><div class="value" id="sessions-today">–</div><div class="label">Sessions today</div></div>
+      <div class="card"><div class="value" id="total-seeds">–</div><div class="label">Total seeds (30d)</div></div>
+      <div class="card"><div class="value" id="retention-d7">–</div><div class="label">D7 retention</div></div>
+    </div>
+    <div class="charts">
+      <div class="chart-card">
+        <h2>Sessions per day</h2>
+        <div class="chart-container"><canvas id="sessions-chart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h2>Activity breakdown</h2>
+        <div class="chart-container"><canvas id="activity-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="charts">
+      <div class="chart-card">
+        <h2>Daily active users</h2>
+        <div class="chart-container"><canvas id="dau-chart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h2>Retention (90d cohort)</h2>
+        <div class="chart-container"><canvas id="retention-chart"></canvas></div>
+        <div class="retention-legend" style="font-size:0.75rem;color:#666;margin-top:8px">
+          Based on <span id="retention-cohort">0</span> users with sessions (90d). D1: next day · D7: within 7 days · D14: within 14 days.
+        </div>
+      </div>
+    </div>
+    <div class="updated" id="updated"></div>
+  </div>
+
+  <script>
+    let sessionsChart, activityChart, dauChart, retentionChart;
+    const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:8000' : '';
+
+    async function load() {
+      try {
+        const r = await fetch(API_BASE + '/api/stats');
+        const data = await r.json();
+
+        if (data.error) throw new Error(data.error);
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+
+        document.getElementById('total-users').textContent = data.total_users.toLocaleString();
+        document.getElementById('sessions-today').textContent = data.sessions_today.toLocaleString();
+        document.getElementById('total-seeds').textContent = data.total_seeds.toLocaleString();
+        const ret = data.retention || {};
+        document.getElementById('retention-d7').textContent = (ret.day7_pct != null ? ret.day7_pct + '%' : '–');
+        document.getElementById('retention-cohort').textContent = ret.cohort_size != null ? ret.cohort_size : '0';
+
+        document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+        const sessionsCtx = document.getElementById('sessions-chart').getContext('2d');
+        if (sessionsChart) sessionsChart.destroy();
+        sessionsChart = new Chart(sessionsCtx, {
+          type: 'line',
+          data: {
+            labels: data.sessions_by_day.map(d => d.date.slice(5)),
+            datasets: [{ label: 'Sessions', data: data.sessions_by_day.map(d => d.count), borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.3 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const activityCtx = document.getElementById('activity-chart').getContext('2d');
+        if (activityChart) activityChart.destroy();
+        activityChart = new Chart(activityCtx, {
+          type: 'bar',
+          data: {
+            labels: data.activity_breakdown.map(a => a.name),
+            datasets: [{ label: 'Sessions', data: data.activity_breakdown.map(a => a.count), backgroundColor: '#f97316' }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+        });
+
+        const dauCtx = document.getElementById('dau-chart').getContext('2d');
+        if (dauChart) dauChart.destroy();
+        dauChart = new Chart(dauCtx, {
+          type: 'line',
+          data: {
+            labels: data.daily_active_users.map(d => d.date.slice(5)),
+            datasets: [{ label: 'Active users', data: data.daily_active_users.map(d => d.count), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.3 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const retentionCtx = document.getElementById('retention-chart').getContext('2d');
+        if (retentionChart) retentionChart.destroy();
+        retentionChart = new Chart(retentionCtx, {
+          type: 'bar',
+          data: {
+            labels: ['D1', 'D7', 'D14'],
+            datasets: [{ label: 'Retention %', data: [ret.day1_pct || 0, ret.day7_pct || 0, ret.day14_pct || 0], backgroundColor: ['#3b82f6', '#8b5cf6', '#6366f1'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+      } catch (e) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = e.message;
+      }
+    }
+
+    load();
+    setInterval(load, 60 * 60 * 1000);
+  </script>
+</body>
+</html>

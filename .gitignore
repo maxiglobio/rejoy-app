@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Secrets & local env
+.env
+**/.env
+*.p8
+AuthKey_*.p8
+
+# Marketing site lives in https://github.com/maxiglobio/rejoy-marketing (avoid duplicate tree)
+website/
+
+# Node (scripts, dashboard)
+node_modules/
+**/node_modules/
+
+# Supabase CLI local state (may contain project URLs)
+supabase/.temp/

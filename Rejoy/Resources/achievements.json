@@ -1,0 +1,1604 @@
+{
+  "achievements": [
+    {
+      "id": "8ea756ca-6f28-43d4-9f03-bd15d7403f72",
+      "section": 1,
+      "sort_order": 0,
+      "symbol": "star.fill",
+      "title": {
+        "en": "Sign of Confidence",
+        "ru": "Знак Уверенности",
+        "uk": "Знак Впевненості"
+      },
+      "description": {
+        "en": "Your honesty today is the foundation of your stability. Soon you will feel that you are firmly on your feet in any situation.",
+        "ru": "Твоя честность сегодня — это фундамент твоей стабильности. Вскоре ты почувствуешь, что твердо стоишь на ногах в любой ситуации.",
+        "uk": "Твоя чесність сьогодні — це фундамент твоєї стабільності. Незабаром ти відчуєш, що твердо стоїш на ногах у будь-якій ситуації."
+      }
+    },
+    {
+      "id": "2d62d1d8-63e7-4dcb-91cf-71a63a1e7df3",
+      "section": 1,
+      "sort_order": 1,
+      "symbol": "crown.fill",
+      "title": {
+        "en": "Leader Sign",
+        "ru": "Знак Лидера",
+        "uk": "Знак Лідера"
+      },
+      "description": {
+        "en": "Your willingness to help others today will return to you with the ability to inspire and lead thousands of people.",
+        "ru": "Твоя готовность помочь другим сегодня вернется к тебе способностью вдохновлять и вести за собой тысячи людей.",
+        "uk": "Твоя готовність допомогти іншим сьогодні повернеться до тебе здатністю надихати та вести за собою тисячі людей."
+      }
+    },
+    {
+      "id": "47a7f52e-ae38-4de8-909c-1e9c453c5c88",
+      "section": 1,
+      "sort_order": 2,
+      "symbol": "shield.fill",
+      "title": {
+        "en": "Sign of Inner Support",
+        "ru": "Знак Внутренней Опоры",
+        "uk": "Знак Внутрішньої Опори"
+      },
+      "description": {
+        "en": "Your caring attitude towards the world today makes your spirit indestructible. In the future, no one will be able to lead you astray.",
+        "ru": "Твое бережное отношение к миру сегодня делает твой дух несокрушимым. В будущем никто не сможет сбить тебя с пути.",
+        "uk": "Твоє дбайливе ставлення до світу сьогодні робить твій дух незламним. У майбутньому ніхто не зможе збити тебе зі шляху."
+      }
+    },
+    {
+      "id": "52b26c4a-6d26-4f07-93e5-f0e4bcd34ec1",
+      "section": 1,
+      "sort_order": 3,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Sign of Attraction",
+        "ru": "Знак Притягательности",
+        "uk": "Знак привабливості"
+      },
+      "description": {
+        "en": "Your kindness today turns into your personal charm. People will be drawn to you, feeling your inner light.",
+        "ru": "Твоя доброта сегодня превращается в твое личное обаяние. Люди будут тянуться к тебе, чувствуя твой внутренний свет.",
+        "uk": "Твоя доброта сьогодні перетворюється на твою особисту чарівність. Люди тягнуться до тебе, відчуваючи твоє внутрішнє світло."
+      }
+    },
+    {
+      "id": "1c80ebca-a5ec-47d6-ba27-bcc83a12b6bc",
+      "section": 1,
+      "sort_order": 4,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Sign of Comfort",
+        "ru": "Знак Комфорта",
+        "uk": "Знак Комфорту"
+      },
+      "description": {
+        "en": "Your tenderness towards your loved ones today creates your future life, full of comfort, warmth and material well-being.",
+        "ru": "Твоя нежность к близким сегодня создает твою будущую жизнь, полную уюта, тепла и материального благополучия.",
+        "uk": "Твоя ніжність до близьких сьогодні створює твоє майбутнє життя, сповнене затишку, тепла та матеріального благополуччя."
+      }
+    },
+    {
+      "id": "fdcc843f-13d6-4852-b324-def592b08972",
+      "section": 1,
+      "sort_order": 5,
+      "symbol": "megaphone.fill",
+      "title": {
+        "en": "Sign of Conviction",
+        "ru": "Знак Убедительности",
+        "uk": "Знак Переконливості"
+      },
+      "description": {
+        "en": "Your sincerity today gives you a voice that will be heard. Your ideas will begin to gain real power.",
+        "ru": "Твоя искренность сегодня дарит тебе голос, который будет услышан. Твои идеи начнут обретать реальную силу.",
+        "uk": "Твоя щирість сьогодні дарує тобі голос, який буде почутий. Твої ідеї почнуть набувати реальної сили."
+      }
+    },
+    {
+      "id": "43af9ef7-9b16-4e33-947c-e0a58f608353",
+      "section": 1,
+      "sort_order": 6,
+      "symbol": "eye.fill",
+      "title": {
+        "en": "Sign of Authority",
+        "ru": "Знак Авторитета",
+        "uk": "Знак Авторитету"
+      },
+      "description": {
+        "en": "Your courage to speak the truth today makes your word law for those around you. They will trust you unconditionally.",
+        "ru": "Твое мужество говорить правду сегодня делает твое слово законом для окружающих. Тебе будут доверять безоговорочно.",
+        "uk": "Твоя мужність говорити правду сьогодні робить твоє слово законом для оточуючих. Тобі довірятимуть беззастережно."
+      }
+    },
+    {
+      "id": "f6c21bb1-5132-4c22-a7d3-ea7257fcf002",
+      "section": 1,
+      "sort_order": 7,
+      "symbol": "hand.raised.fill",
+      "title": {
+        "en": "Sign of Clear Vision",
+        "ru": "Знак Ясного Видения",
+        "uk": "Знак Ясного Бачення"
+      },
+      "description": {
+        "en": "Your compassion today will open you to deep intuition. You will begin to see opportunities where others see walls.",
+        "ru": "Твое сострадание сегодня откроет тебе глубокую интуицию. Ты начнешь видеть возможности там, где другие видят стены.",
+        "uk": "Твоє співчуття сьогодні відкриє тобі глибоку інтуїцію. Ти почнеш бачити можливості там, де бачать інші стіни."
+      }
+    },
+    {
+      "id": "856da5b6-0238-4317-9801-4e1c5eb10c50",
+      "section": 1,
+      "sort_order": 8,
+      "symbol": "leaf.fill",
+      "title": {
+        "en": "Sign of Trust",
+        "ru": "Знак Доверия",
+        "uk": "Знак Довіри"
+      },
+      "description": {
+        "en": "Your refusal to criticize today makes your reputation impeccable. You will become someone you can always rely on.",
+        "ru": "Твой отказ от критики сегодня делает твою репутацию безупречной. Ты станешь тем, на кого всегда можно положиться.",
+        "uk": "Твоя відмова від критики сьогодні робить твою репутацію бездоганною. Ти станеш тим, на кого завжди можна покластися."
+      }
+    },
+    {
+      "id": "b3ef37d5-8853-48fc-aa14-786fddbb9555",
+      "section": 1,
+      "sort_order": 9,
+      "symbol": "lightbulb.fill",
+      "title": {
+        "en": "Longevity Sign",
+        "ru": "Знак Долголетия",
+        "uk": "Знак Довголіття"
+      },
+      "description": {
+        "en": "Every act of caring for someone else's life today adds years of health and activity to your own future.",
+        "ru": "Каждое проявление заботы о чужой жизни сегодня добавляет годы здоровья и активности в твое собственное будущее.",
+        "uk": "Кожен вияв турботи про чуже життя сьогодні додає роки здоров'я та активності у твоє власне майбутнє."
+      }
+    },
+    {
+      "id": "9e1ca1ea-d606-4a88-9171-ae5c20930e10",
+      "section": 1,
+      "sort_order": 10,
+      "symbol": "balance.scale",
+      "title": {
+        "en": "Sign of Hidden Wisdom",
+        "ru": "Знак Скрытой Мудрости",
+        "uk": "Знак прихованої мудрості"
+      },
+      "description": {
+        "en": "Your humility today sets the stage for sudden and profound insights that will change your life.",
+        "ru": "Твое смирение сегодня подготавливает почву для внезапных и глубоких озарений, которые изменят твою жизнь.",
+        "uk": "Твоя смирення сьогодні готує ґрунт для раптових і глибоких осяянь, які змінять твоє життя."
+      }
+    },
+    {
+      "id": "9a73422e-0034-415b-ba9a-b64bdca6bbf0",
+      "section": 1,
+      "sort_order": 11,
+      "symbol": "figure.walk",
+      "title": {
+        "en": "Sign of Harmony",
+        "ru": "Знак Гармонии",
+        "uk": "Знак Гармонії"
+      },
+      "description": {
+        "en": "Your desire for peace in relationships today will make your life balanced and aesthetically beautiful.",
+        "ru": "Твое стремление к миру в отношениях сегодня сделает твою жизнь сбалансированной и эстетически красивой.",
+        "uk": "Твоє прагнення до світу у відносинах сьогодні зробить твоє життя збалансованим та естетично красивим."
+      }
+    },
+    {
+      "id": "871c57fd-7d3d-4deb-81ec-9c8daf8ef4a1",
+      "section": 1,
+      "sort_order": 12,
+      "symbol": "bolt.fill",
+      "title": {
+        "en": "Sign of Lightness",
+        "ru": "Знак Легкости",
+        "uk": "Знак Легкості"
+      },
+      "description": {
+        "en": "Your refusal of selfishness today will allow you in the future to bypass any life obstacles easily, as if dancing.",
+        "ru": "Твой отказ от эгоизма сегодня позволит тебе в будущем обходить любые жизненные препятствия легко, словно танцуя.",
+        "uk": "Твоя відмова від егоїзму сьогодні дозволить тобі в майбутньому обходити будь-які життєві перешкоди легко, немов танцюючи."
+      }
+    },
+    {
+      "id": "7120d68b-54d7-4911-baf9-acb94bc17848",
+      "section": 1,
+      "sort_order": 13,
+      "symbol": "gift.fill",
+      "title": {
+        "en": "Energy Protection Sign",
+        "ru": "Знак Энергетической Защиты",
+        "uk": "Знак Енергетичного Захисту"
+      },
+      "description": {
+        "en": "Your mental discipline today creates a field of safety around you. Your affairs and health are under reliable protection.",
+        "ru": "Твоя дисциплина ума сегодня создает вокруг тебя поле безопасности. Твои дела и здоровье под надежной охраной.",
+        "uk": "Твоя дисципліна розуму сьогодні створює навколо тебе поле безпеки. Твої справи та здоров'я під надійною охороною."
+      }
+    },
+    {
+      "id": "5456a956-86af-42e0-8628-81981184131e",
+      "section": 1,
+      "sort_order": 14,
+      "symbol": "list.bullet.clipboard",
+      "title": {
+        "en": "Sign of Strong Shoulders",
+        "ru": "Знак Сильных Плеч",
+        "uk": "Знак Сильних Плечей"
+      },
+      "description": {
+        "en": "Your responsibility today turns into the ability to cope with any challenges of fate with a smile on your face.",
+        "ru": "Твоя ответственность сегодня превращается в способность справляться с любыми вызовами судьбы с улыбкой на лице.",
+        "uk": "Твоя відповідальність сьогодні перетворюється на здатність справлятися з будь-якими викликами долі з посмішкою на обличчі."
+      }
+    },
+    {
+      "id": "17da9fc4-c753-4a9b-a6c4-bdcad6a9ed11",
+      "section": 1,
+      "sort_order": 15,
+      "symbol": "ear.fill",
+      "title": {
+        "en": "Sign of Pleasure",
+        "ru": "Знак Наслаждения",
+        "uk": "Знак Насолоди"
+      },
+      "description": {
+        "en": "Your generosity towards others today will return to you with the ability to truly enjoy every moment of life.",
+        "ru": "Твоя щедрость по отношению к другим сегодня вернется к тебе способностью получать истинное удовольствие от каждого момента жизни.",
+        "uk": "Твоя щедрість стосовно інших сьогодні повернеться до тебе здатністю отримувати справжнє задоволення від кожного моменту життя."
+      }
+    },
+    {
+      "id": "116dc62b-bfb9-4d74-a391-9145b31cc2ca",
+      "section": 1,
+      "sort_order": 16,
+      "symbol": "road.lanes",
+      "title": {
+        "en": "Sign of Order",
+        "ru": "Знак Порядка",
+        "uk": "Знак Порядку"
+      },
+      "description": {
+        "en": "Your attention to detail today will manifest itself as perfect order in your affairs and plans tomorrow.",
+        "ru": "Твое внимание к деталям сегодня проявится как идеальный порядок в твоих делах и планах завтра.",
+        "uk": "Твоя увага до деталей сьогодні проявиться як ідеальний порядок у твоїх справах та планах завтра."
+      }
+    },
+    {
+      "id": "511685fb-8a05-4e54-8e4a-c1a0b2216c73",
+      "section": 1,
+      "sort_order": 17,
+      "symbol": "figure.stand",
+      "title": {
+        "en": "Sign of Deep Hearing",
+        "ru": "Знак Глубокого Слуха",
+        "uk": "Знак Глибокого Слуху"
+      },
+      "description": {
+        "en": "Your attention to the feelings of others today will give you the gift of hearing people's true intentions and understanding them without words.",
+        "ru": "Твое внимание к чувствам других сегодня даст тебе дар слышать истинные намерения людей и понимать их без слов.",
+        "uk": "Твоя увага до почуттів інших сьогодні дасть тобі дар чути справжні наміри людей і розуміти їх без слів."
+      }
+    },
+    {
+      "id": "a436337b-e475-4eaa-8d9c-cdb00a959a39",
+      "section": 1,
+      "sort_order": 18,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Sign of a Smooth Path",
+        "ru": "Знак Гладкого Пути",
+        "uk": "Знак Гладкого Шляху"
+      },
+      "description": {
+        "en": "Your politeness today eliminates sharp turns and crises in your future. Life becomes predictably happy.",
+        "ru": "Твоя вежливость сегодня устраняет резкие повороты и кризисы в твоем будущем. Жизнь становится предсказуемо счастливой.",
+        "uk": "Твоя ввічливість сьогодні усуває різкі повороти та кризи у твоєму майбутньому. Життя стає передбачувано щасливим."
+      }
+    },
+    {
+      "id": "06e14d28-f2db-4b00-86dc-ff3a0b405685",
+      "section": 1,
+      "sort_order": 19,
+      "symbol": "star.fill",
+      "title": {
+        "en": "Sign of Majesty",
+        "ru": "Знак Величественности",
+        "uk": "Знак величності"
+      },
+      "description": {
+        "en": "Your fearlessness today will give you an unshakable confidence that will be felt by everyone who communicates with you.",
+        "ru": "Твое бесстрашие сегодня дарует тебе непоколебимую уверенность, которая будет чувствоваться каждым, кто с тобой общается.",
+        "uk": "Твоє безстрашність сьогодні дарує тобі непохитну впевненість, яка відчуватиметься кожним, хто з тобою спілкується."
+      }
+    },
+    {
+      "id": "2af49909-71e3-40dd-8f94-35aadd6e3b21",
+      "section": 2,
+      "sort_order": 20,
+      "symbol": "chart.line.uptrend.xyaxis",
+      "title": {
+        "en": "Financial Flow Sign",
+        "ru": "Знак Финансового Потока",
+        "uk": "Знак фінансового потоку"
+      },
+      "description": {
+        "en": "Your generosity today is a magnet for new income. Expect good news in the financial sector.",
+        "ru": "Твоя сегодняшняя щедрость — это магнит для новых доходов. Ожидай приятных новостей в финансовой сфере.",
+        "uk": "Твоя сьогоднішня щедрість – це магніт для нових доходів. Чекай приємних новин у фінансовій сфері."
+      }
+    },
+    {
+      "id": "67fe024e-f3eb-48d3-9a52-5e66b67c65bd",
+      "section": 2,
+      "sort_order": 21,
+      "symbol": "sun.max.fill",
+      "title": {
+        "en": "Sunny Day Sign",
+        "ru": "Знак Солнечного Дня",
+        "uk": "Знак Сонячного дня"
+      },
+      "description": {
+        "en": "Your rejection of anger today clears your future of “bad weather” in relationships. Tomorrow will be clear.",
+        "ru": "Твой сегодняшний отказ от гнева очищает твое будущее от «плохой погоды» в отношениях. Завтра будет ясным.",
+        "uk": "Твоя сьогоднішня відмова від гніву очищає твоє майбутнє від «поганої погоди» у стосунках. Завтра буде зрозумілим."
+      }
+    },
+    {
+      "id": "699a0ae1-a4a6-45d4-940e-c1e21662500a",
+      "section": 2,
+      "sort_order": 22,
+      "symbol": "lock.shield.fill",
+      "title": {
+        "en": "Safety Sign",
+        "ru": "Знак Сохранности",
+        "uk": "Знак безпеки"
+      },
+      "description": {
+        "en": "Your honesty today protects your property and your borders better than any security system.",
+        "ru": "Твоя честность сегодня защищает твое имущество и твои границы лучше любой системы безопасности.",
+        "uk": "Твоя чесність сьогодні захищає твоє майно і твої межі краще за будь-яку систему безпеки."
+      }
+    },
+    {
+      "id": "ba1c28b2-b684-413f-9bb0-dd4d984e2b4b",
+      "section": 2,
+      "sort_order": 23,
+      "symbol": "person.2.fill",
+      "title": {
+        "en": "Sign of Attraction",
+        "ru": "Знак Притяжения",
+        "uk": "Знак тяжіння"
+      },
+      "description": {
+        "en": "Your politeness today makes your presence a gift to others. You will be invited to the best projects.",
+        "ru": "Твоя вежливость сегодня делает твое присутствие подарком для окружающих. Тебя будут приглашать в лучшие проекты.",
+        "uk": "Твоя ввічливість сьогодні робить твою присутність подарунком для оточуючих. Тебе запрошуватимуть у найкращі проекти."
+      }
+    },
+    {
+      "id": "11e09189-f900-40d5-b394-f3d94b781804",
+      "section": 2,
+      "sort_order": 24,
+      "symbol": "bubble.left.and.bubble.right.fill",
+      "title": {
+        "en": "Sign of the Peacemaker",
+        "ru": "Знак Миротворца",
+        "uk": "Знак Миротворця"
+      },
+      "description": {
+        "en": "Your efforts to bring people together today create a dream team around you in the future. You will never be alone.",
+        "ru": "Твои попытки примирить людей сегодня создают команду мечты вокруг тебя в будущем. Ты никогда не останешься один.",
+        "uk": "Твої спроби примирити людей сьогодні створюють команду мрії довкола тебе у майбутньому. Ти ніколи не залишишся сам."
+      }
+    },
+    {
+      "id": "7b68e172-f9e0-4e91-8c25-70c6b0f5a2af",
+      "section": 2,
+      "sort_order": 25,
+      "symbol": "brain.head.profile",
+      "title": {
+        "en": "Sign of a Sharp Mind",
+        "ru": "Знак Острого Ума",
+        "uk": "Знак гострого розуму"
+      },
+      "description": {
+        "en": "Your training today will give you an intellect that will instantly find solutions to the most complex problems.",
+        "ru": "Твое сегодняшнее обучение дарует тебе интеллект, который будет мгновенно находить решения сложнейших задач.",
+        "uk": "Твоє сьогоднішнє навчання дарує тобі інтелект, який миттєво знаходитиме рішення найскладніших завдань."
+      }
+    },
+    {
+      "id": "47e712ca-5aac-448a-9e5c-4f53cd7a8330",
+      "section": 2,
+      "sort_order": 26,
+      "symbol": "gift.fill",
+      "title": {
+        "en": "Cozy Nest Sign",
+        "ru": "Знак Уютного Гнезда",
+        "uk": "Знак Затишного Гнізда"
+      },
+      "description": {
+        "en": "Your care for your loved ones today is the seed of your future home, full of love, laughter and peace.",
+        "ru": "Твоя забота о близких сегодня — это семя твоего будущего дома, полного любви, смеха и спокойствия.",
+        "uk": "Твоя турбота про близьких сьогодні — це насіння твого майбутнього будинку, повного кохання, сміху та спокою."
+      }
+    },
+    {
+      "id": "a6198d68-c1e6-4112-b98e-a12105c0f28c",
+      "section": 2,
+      "sort_order": 27,
+      "symbol": "lightbulb.fill",
+      "title": {
+        "en": "Sign of the Clean Mirror",
+        "ru": "Знак Чистого Зеркала",
+        "uk": "Знак Чистого Дзеркала"
+      },
+      "description": {
+        "en": "Your meditation today calmed the noise in my head. Tomorrow you will see the world without fear and doubt.",
+        "ru": "Твоя медитация сегодня успокоила шум в голове. Завтра ты увидишь мир без страха и сомнений.",
+        "uk": "Твоя медитація сьогодні заспокоїла галас. Завтра ти побачиш світ без страху та сумнівів."
+      }
+    },
+    {
+      "id": "7f0d6d31-c1a2-495a-bf13-743566eb2c48",
+      "section": 2,
+      "sort_order": 28,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Sign of the Flow of Luck",
+        "ru": "Знак Потока Удачи",
+        "uk": "Знак Потоку Удачі"
+      },
+      "description": {
+        "en": "Your joy for the successes of your friends today attracts a wave of luck into your personal life.",
+        "ru": "Твоя радость за успехи друзей сегодня притягивает волну везения в твою личную жизнь.",
+        "uk": "Твоя радість за успіхи друзів сьогодні притягує хвилю везіння у твоє особисте життя."
+      }
+    },
+    {
+      "id": "a1f903f5-fa67-4038-b199-69a12d814788",
+      "section": 2,
+      "sort_order": 29,
+      "symbol": "airplane",
+      "title": {
+        "en": "Sign of the Invisible Shield",
+        "ru": "Знак Невидимого Щита",
+        "uk": "Знак Невидимого Щита"
+      },
+      "description": {
+        "en": "Your refusal to judge today protects you from other people's manipulations and negative influences.",
+        "ru": "Твой отказ от осуждения сегодня защищает тебя от чужих манипуляций и негативного влияния.",
+        "uk": "Твоя відмова від засудження сьогодні захищає тебе від чужих маніпуляцій та негативного впливу."
+      }
+    },
+    {
+      "id": "65d97e39-4df7-453a-9795-9a054e5ffedc",
+      "section": 2,
+      "sort_order": 30,
+      "symbol": "hand.raised.fill",
+      "title": {
+        "en": "Sign of Abundance",
+        "ru": "Знак Изобилия",
+        "uk": "Знак Достатку"
+      },
+      "description": {
+        "en": "Your preparation of food for others today will ensure that there will always be abundance and prosperity in your world.",
+        "ru": "Твое приготовление еды для других сегодня гарантирует, что в твоем мире всегда будет достаток и процветание.",
+        "uk": "Твоє приготування їжі для інших сьогодні гарантує, що у твоєму світі завжди буде достаток та процвітання."
+      }
+    },
+    {
+      "id": "18187a38-40e1-4a8d-b0ea-85bc501e9f3f",
+      "section": 2,
+      "sort_order": 31,
+      "symbol": "figure.stand",
+      "title": {
+        "en": "Sign of Fresh Ideas",
+        "ru": "Знак Свежих Идей",
+        "uk": "Знак свіжих ідей"
+      },
+      "description": {
+        "en": "Your order in things today is an invitation to the brilliant thoughts that will visit you tomorrow morning.",
+        "ru": "Твой порядок в вещах сегодня — это приглашение для гениальных мыслей, которые посетят тебя завтра утром.",
+        "uk": "Твій порядок у речах сьогодні – це запрошення для геніальних думок, які відвідають тебе завтра вранці."
+      }
+    },
+    {
+      "id": "71bb6a05-aeb5-468b-b992-1b73ab80c7c9",
+      "section": 2,
+      "sort_order": 32,
+      "symbol": "hand.thumbsup.fill",
+      "title": {
+        "en": "Sign of Sincere Love",
+        "ru": "Знак Искренней Любви",
+        "uk": "Знак щирого кохання"
+      },
+      "description": {
+        "en": "Your respect for the feelings of others today creates a reason for deep loyalty to your partner.",
+        "ru": "Твое уважение к чувствам других сегодня создает причину для глубокой верности твоего партнера.",
+        "uk": "Твоя повага до почуттів інших створює причину для глибокої вірності твого партнера."
+      }
+    },
+    {
+      "id": "2e8898ab-9216-44e5-a981-b643abbedb09",
+      "section": 2,
+      "sort_order": 33,
+      "symbol": "clock.fill",
+      "title": {
+        "en": "Sign of Recognition",
+        "ru": "Знак Признания",
+        "uk": "Знак визнання"
+      },
+      "description": {
+        "en": "Every kind word you say today will return to you as a wave of gratitude and recognition of your talent.",
+        "ru": "Каждое доброе слово, сказанное тобой сегодня, вернется к тебе как волна благодарности и признания твоего таланта.",
+        "uk": "Кожне добре слово, сказане тобою сьогодні, повернеться до тебе як хвиля вдячності та визнання твого таланту."
+      }
+    },
+    {
+      "id": "b88128f4-8f4f-4f4e-9a62-bb539ca7d6f7",
+      "section": 2,
+      "sort_order": 34,
+      "symbol": "chart.line.uptrend.xyaxis",
+      "title": {
+        "en": "Sign of the Wise Mentor",
+        "ru": "Знак Мудрого Наставника",
+        "uk": "Знак Мудрого Наставника"
+      },
+      "description": {
+        "en": "Your willingness to share knowledge today ensures that you will always find a way out of any impasse.",
+        "ru": "Твоя готовность делиться знаниями сегодня гарантирует, что ты всегда найдешь выход из любого тупика.",
+        "uk": "Твоя готовність ділитися знаннями сьогодні гарантує, що ти завжди знайдеш вихід із будь-якого глухого кута."
+      }
+    },
+    {
+      "id": "c694a394-78cd-4336-a4ae-2104a650bd14",
+      "section": 2,
+      "sort_order": 35,
+      "symbol": "sun.max.fill",
+      "title": {
+        "en": "Safe Travel Sign",
+        "ru": "Знак Безопасного Путешествия",
+        "uk": "Знак Безпечної Подорожі"
+      },
+      "description": {
+        "en": "Your respect for nature today will make your future trips easy and filled with wonders.",
+        "ru": "Твое бережное отношение к природе сегодня сделает твои будущие поездки легкими и наполненными чудесами.",
+        "uk": "Твоє дбайливе ставлення до природи сьогодні зробить твої майбутні поїздки легкими та наповненими чудесами."
+      }
+    },
+    {
+      "id": "5d98678c-1564-4ac4-ab18-43796c1bac41",
+      "section": 2,
+      "sort_order": 36,
+      "symbol": "lock.shield.fill",
+      "title": {
+        "en": "Sign of the Power of Calm",
+        "ru": "Знак Силы Спокойствия",
+        "uk": "Знак Сили Спокою"
+      },
+      "description": {
+        "en": "Your patience today turns into your personal charisma and influence on others.",
+        "ru": "Твое терпение сегодня превращается в твою личную харизму и влияние на окружающих.",
+        "uk": "Твоє терпіння сьогодні перетворюється на твою особисту харизму та вплив на оточуючих."
+      }
+    },
+    {
+      "id": "9df08e6b-fd90-44e9-a606-be3750e0d8dd",
+      "section": 2,
+      "sort_order": 37,
+      "symbol": "person.2.fill",
+      "title": {
+        "en": "Sign of Nobility",
+        "ru": "Знак Благородства",
+        "uk": "Знак Благородства"
+      },
+      "description": {
+        "en": "Your self-control today is the reason for you to always feel worthy in any society.",
+        "ru": "Твое сегодняшнее самообладание — это причина для того, чтобы ты всегда чувствовал себя достойно в любом обществе.",
+        "uk": "Твоє сьогоднішнє самовладання — це причина, щоб ти завжди почував себе гідно в будь-якому суспільстві."
+      }
+    },
+    {
+      "id": "10955f3d-a44c-4771-90c5-03f1c9554c1d",
+      "section": 2,
+      "sort_order": 38,
+      "symbol": "bubble.left.and.bubble.right.fill",
+      "title": {
+        "en": "Good Atmosphere Sign",
+        "ru": "Знак Доброй Атмосферы",
+        "uk": "Знак Доброї Атмосфери"
+      },
+      "description": {
+        "en": "Your goodwill today dissolves conflicts before they even begin.",
+        "ru": "Твоя доброжелательность сегодня растворяет конфликты еще до того, как они успеют начаться.",
+        "uk": "Твоя доброзичливість сьогодні розгортає конфлікти ще до того, як вони встигнуть розпочатися."
+      }
+    },
+    {
+      "id": "198ba40f-1756-4892-81ea-d34de943d63e",
+      "section": 2,
+      "sort_order": 39,
+      "symbol": "brain.head.profile",
+      "title": {
+        "en": "Free Time Sign",
+        "ru": "Знак Свободного Времени",
+        "uk": "Знак Вільного Часу"
+      },
+      "description": {
+        "en": "Your help to your colleagues today will free up your time for creativity and relaxation in the future.",
+        "ru": "Твоя помощь коллегам сегодня освободит твое время для творчества и отдыха в будущем.",
+        "uk": "Твоя допомога колегам сьогодні звільнить твій час для творчості та відпочинку у майбутньому."
+      }
+    },
+    {
+      "id": "33e9d009-6054-4461-85a2-6e712eccc459",
+      "section": 3,
+      "sort_order": 40,
+      "symbol": "umbrella.fill",
+      "title": {
+        "en": "Sign of Protection (Umbrella)",
+        "ru": "Знак Защиты (Зонт)",
+        "uk": "Знак захисту (парасолька)"
+      },
+      "description": {
+        "en": "You helped someone feel safe. Now the Universe takes you under its protection.",
+        "ru": "Ты помог кому-то почувствовать себя в безопасности. Теперь Вселенная берет тебя под свое покровительство.",
+        "uk": "Ти допоміг комусь відчути себе у безпеці. Тепер Всесвіт бере тебе під своє заступництво."
+      }
+    },
+    {
+      "id": "310e67c2-2005-4059-b4eb-867677403bc3",
+      "section": 3,
+      "sort_order": 41,
+      "symbol": "fish.fill",
+      "title": {
+        "en": "Freedom Sign (Goldfish)",
+        "ru": "Знак Свободы (Золотые Рыбки)",
+        "uk": "Знак Свободи (Золоті Рибки)"
+      },
+      "description": {
+        "en": "Your fearlessness today gives you the ability to maneuver in the ocean of life with ease and joy.",
+        "ru": "Твое бесстрашие сегодня дает тебе способность маневрировать в океане жизни легко и радостно.",
+        "uk": "Твоє безстрашність сьогодні дає тобі здатність маневрувати в океані життя легко та радісно."
+      }
+    },
+    {
+      "id": "3c440dc3-40c6-4827-ae2d-7a23baf17352",
+      "section": 3,
+      "sort_order": 42,
+      "symbol": "drop.fill",
+      "title": {
+        "en": "Sign of Inexhaustibility (Vase)",
+        "ru": "Знак Неисчерпаемости (Ваза)",
+        "uk": "Знак невичерпності (Ваза)"
+      },
+      "description": {
+        "en": "Your generosity has filled your inner cup. You will always feel like you are “enough.”",
+        "ru": "Твоя щедрость наполнила твою внутреннюю чашу. Ты всегда будешь чувствовать, что тебе «всего достаточно».",
+        "uk": "Твоя щедрість наповнила твою внутрішню чашу. Ти завжди відчуватимеш, що тобі «всього достатньо»."
+      }
+    },
+    {
+      "id": "60446331-f34e-4925-a35d-21a5269ecafd",
+      "section": 3,
+      "sort_order": 43,
+      "symbol": "leaf.fill",
+      "title": {
+        "en": "Sign of Purity (Lotus)",
+        "ru": "Знак Чистоты (Лотос)",
+        "uk": "Знак Чистоти (Лотос)"
+      },
+      "description": {
+        "en": "You remained calm amid the hustle and bustle. Your success will be inspiring and flawless.",
+        "ru": "Ты сохранил спокойствие среди суеты. Твой успех будет вдохновляющим и безупречным.",
+        "uk": "Ти зберіг спокій серед суєти. Твій успіх буде надихаючим та бездоганним."
+      }
+    },
+    {
+      "id": "862e4092-d01a-495e-8684-614d4aa7630d",
+      "section": 3,
+      "sort_order": 44,
+      "symbol": "shell.fill",
+      "title": {
+        "en": "Good News Sign (Shell)",
+        "ru": "Знак Благой Вести (Раковина)",
+        "uk": "Знак Благої Вісті (Раковина)"
+      },
+      "description": {
+        "en": "Your good intentions today are a signal that the right people and opportunities will respond to.",
+        "ru": "Твои добрые намерения сегодня — это сигнал, на который откликнутся нужные люди и возможности.",
+        "uk": "Твої добрі наміри сьогодні — це сигнал, на який відгукнуться потрібні люди та можливості."
+      }
+    },
+    {
+      "id": "84b5b84a-ad69-409a-8294-73cd2e812dc3",
+      "section": 3,
+      "sort_order": 45,
+      "symbol": "infinity",
+      "title": {
+        "en": "Sign of Infinite Happiness (Knot)",
+        "ru": "Знак Бесконечного Счастья (Узел)",
+        "uk": "Знак Нескінченного Щастя (Вузол)"
+      },
+      "description": {
+        "en": "Your actions today combined wisdom and love. Your joy will last long.",
+        "ru": "Твои сегодняшние действия соединили мудрость и любовь. Твоя радость будет длиться долго.",
+        "uk": "Твої сьогоднішні дії поєднали мудрість та любов. Твоя радість триватиме довго."
+      }
+    },
+    {
+      "id": "dfc19ddc-675f-47d0-a19e-9767acf2f448",
+      "section": 3,
+      "sort_order": 46,
+      "symbol": "flag.fill",
+      "title": {
+        "en": "Victory Sign (Banner)",
+        "ru": "Знак Победы (Знамя)",
+        "uk": "Знак Перемоги (Прапор)"
+      },
+      "description": {
+        "en": "You have overcome your anxiety or laziness. Today you are a real winner in your life.",
+        "ru": "Ты справился со своей тревогой или ленью. Сегодня ты — настоящий победитель в своей жизни.",
+        "uk": "Ти впорався зі своєю тривогою чи лінню. Сьогодні ти справжній переможець у своєму житті."
+      }
+    },
+    {
+      "id": "039820d0-238c-4f7f-a04f-4b1fd740647e",
+      "section": 3,
+      "sort_order": 47,
+      "symbol": "arrow.triangle.2.circlepath",
+      "title": {
+        "en": "Sign of the Right Course (Wheel)",
+        "ru": "Знак Верного Курса (Колесо)",
+        "uk": "Знак Вірного Курсу (Колесо)"
+      },
+      "description": {
+        "en": "You have started a cycle of positive change. Your life is moving in the right direction.",
+        "ru": "Ты запустил цикл позитивных перемен. Твоя жизнь движется в самом правильном направлении.",
+        "uk": "Ти запустив цикл позитивних змін. Твоє життя рухається у самому правильному напрямку."
+      }
+    },
+    {
+      "id": "8282b359-6143-4a5c-ab67-35a35c36a965",
+      "section": 3,
+      "sort_order": 48,
+      "symbol": "gemstone.fill",
+      "title": {
+        "en": "Diamond Sign",
+        "ru": "Знак Бриллианта",
+        "uk": "Знак Діаманта"
+      },
+      "description": {
+        "en": "Your awareness today has limited your mind. Your decisions have become clear and brilliant.",
+        "ru": "Твоя осознанность сегодня огранила твой ум. Твои решения стали четкими и блестящими.",
+        "uk": "Твоя свідомість сьогодні обмежила твій розум. Твої рішення стали чіткими та блискучими."
+      }
+    },
+    {
+      "id": "b8e7d7a4-e2c4-455b-884a-42d676ad63d7",
+      "section": 3,
+      "sort_order": 49,
+      "symbol": "tree.fill",
+      "title": {
+        "en": "Tree of Wishes Sign",
+        "ru": "Знак Дерева Желаний",
+        "uk": "Знак Дерева Бажання"
+      },
+      "description": {
+        "en": "Your concern for others today has planted a seed that will soon fulfill your deepest desire.",
+        "ru": "Твоя забота о других сегодня посадила семя, которое вскоре исполнит твое заветное желание.",
+        "uk": "Твоя турбота про інших сьогодні посадила насіння, яке незабаром виконає твоє заповітне бажання."
+      }
+    },
+    {
+      "id": "6eb655df-6036-451b-8f58-92c3d36d64ba",
+      "section": 4,
+      "sort_order": 50,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Mark of the Master of Purity",
+        "ru": "Знак Мастера Чистоты",
+        "uk": "Знак Майстра Чистоти"
+      },
+      "description": {
+        "en": "By putting things in order, you have made room for new energy. You just erased an old problem from your life.",
+        "ru": "Наводя порядок, ты освободил место для новой энергии. Ты только что стер одну старую проблему из своей жизни.",
+        "uk": "Наводячи лад, ти звільнив місце для нової енергії. Ти щойно стер одну стару проблему зі свого життя."
+      }
+    },
+    {
+      "id": "64ff31e5-4671-477c-9e8f-8149cdfa2967",
+      "section": 4,
+      "sort_order": 51,
+      "symbol": "drop.fill",
+      "title": {
+        "en": "Sign of a Worthy Vessel",
+        "ru": "Знак Достойного Сосуда",
+        "uk": "Знак гідної судини"
+      },
+      "description": {
+        "en": "Your modesty today makes you the one to whom life joyfully gives the greatest gifts.",
+        "ru": "Твоя скромность сегодня делает тебя тем, кому жизнь с радостью дарит самые большие подарки.",
+        "uk": "Твоя скромність сьогодні робить тебе тим, кому життя радо дарує найбільші подарунки."
+      }
+    },
+    {
+      "id": "25384347-ba78-4a24-ba45-9f1c413e2d2b",
+      "section": 4,
+      "sort_order": 52,
+      "symbol": "lightbulb.fill",
+      "title": {
+        "en": "Sign of the Living Lamp",
+        "ru": "Знак Живой Лампы",
+        "uk": "Знак Живий Лампи"
+      },
+      "description": {
+        "en": "Your evening joy is the energy for your tomorrow's success. She will work for you while you sleep.",
+        "ru": "Твоя вечерняя радость — это энергия для твоего завтрашнего успеха. Она будет работать на тебя, пока ты спишь.",
+        "uk": "Твоя вечірня радість це енергія для твого завтрашнього успіху. Вона працюватиме на тебе, поки ти спиш."
+      }
+    },
+    {
+      "id": "981b5e09-66ee-4792-b825-62e09fe134c2",
+      "section": 4,
+      "sort_order": 53,
+      "symbol": "water.waves",
+      "title": {
+        "en": "Ocean World Sign",
+        "ru": "Знак Океанического Мира",
+        "uk": "Знак Океанічного Світу"
+      },
+      "description": {
+        "en": "Your calm today has made your mind deep. Now small troubles simply cannot affect you.",
+        "ru": "Твое спокойствие сегодня сделало твой ум глубоким. Теперь мелкие неприятности просто не могут тебя задеть.",
+        "uk": "Твій спокій сьогодні зробив твій розум глибоким. Тепер дрібні неприємності просто не можуть тебе зачепити."
+      }
+    },
+    {
+      "id": "b51443d9-4273-4ed1-936f-1a0d700f1d53",
+      "section": 4,
+      "sort_order": 54,
+      "symbol": "scope",
+      "title": {
+        "en": "Diamond Thread Sign",
+        "ru": "Знак Алмазной Нити",
+        "uk": "Знак Алмазної нитки"
+      },
+      "description": {
+        "en": "You kept your focus on the main thing. Your path to your goal has become several times shorter.",
+        "ru": "Ты сохранил фокус на главном. Твой путь к цели стал в несколько раз короче.",
+        "uk": "Ти зберіг фокус на головному. Твій шлях до мети став у кілька разів коротшим."
+      }
+    },
+    {
+      "id": "ad8c0a97-a5cf-4b6d-aa58-2f36b55bade3",
+      "section": 4,
+      "sort_order": 55,
+      "symbol": "mic.fill",
+      "title": {
+        "en": "Sign of a Confident Voice",
+        "ru": "Знак Уверенного Голоса",
+        "uk": "Знак Впевненого Голосу"
+      },
+      "description": {
+        "en": "Your honest decision today made your confidence unshakable. I can hear you from afar.",
+        "ru": "Твое честное решение сегодня сделало твою уверенность непоколебимой. Тебя слышно издалека.",
+        "uk": "Твоє чесне рішення сьогодні зробило твою впевненість непохитною. Тебе чути здалеку."
+      }
+    },
+    {
+      "id": "c660c1b8-b0c9-4368-8d27-4c827e263b96",
+      "section": 4,
+      "sort_order": 56,
+      "symbol": "sun.horizon.fill",
+      "title": {
+        "en": "Sign of a Beautiful Tomorrow",
+        "ru": "Знак Красивого Завтра",
+        "uk": "Знак Красивого Завтра"
+      },
+      "description": {
+        "en": "Your kind attitude towards elders today guarantees you respect and comfort in the future.",
+        "ru": "Твое доброе отношение к старшим сегодня гарантирует тебе уважение и комфорт в будущем.",
+        "uk": "Твоє добре ставлення до старших сьогодні гарантує тобі повагу та комфорт у майбутньому."
+      }
+    },
+    {
+      "id": "f6bb16cd-ba06-4393-bfb3-fd80bff575dd",
+      "section": 4,
+      "sort_order": 57,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "High Point Sign",
+        "ru": "Знак Высокой Точки",
+        "uk": "Знак високої точки"
+      },
+      "description": {
+        "en": "Your meditation has lifted you above the hustle and bustle. Now you see the whole picture of your life.",
+        "ru": "Твоя медитация подняла тебя над суетой. Теперь ты видишь всю картину своей жизни целиком.",
+        "uk": "Твоя медитація підняла тебе над суєтою. Тепер ти бачиш всю картину свого життя."
+      }
+    },
+    {
+      "id": "86464dc9-ee32-4fc1-b764-e7cd4fc076b5",
+      "section": 4,
+      "sort_order": 58,
+      "symbol": "hand.raised.fill",
+      "title": {
+        "en": "Heart Response Sign",
+        "ru": "Знак Сердечного Отклика",
+        "uk": "Знак Серцевого відгуку"
+      },
+      "description": {
+        "en": "Your compassion for an unpleasant person today is the fastest path to your personal healing.",
+        "ru": "Твое сострадание к неприятному человеку сегодня — это самый быстрый путь к твоему личному исцелению.",
+        "uk": "Твоє співчуття до неприємної людини сьогодні – це найшвидший шлях до твого особистого зцілення."
+      }
+    },
+    {
+      "id": "fa8af5c8-6cf6-408e-ab41-a8aa48ceb4af",
+      "section": 4,
+      "sort_order": 59,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Soft Touch Sign",
+        "ru": "Знак Мягкого Прикосновения",
+        "uk": "Знак М'якого Дотику"
+      },
+      "description": {
+        "en": "Your politeness today has enveloped your future in an atmosphere of tenderness and care.",
+        "ru": "Твоя вежливость сегодня окутала твое будущее атмосферой нежности и заботы.",
+        "uk": "Твоя ввічливість сьогодні огорнула твоє майбутнє атмосферою ніжності та турботи."
+      }
+    },
+    {
+      "id": "fe35665c-74ab-467b-9133-5b9559b29c5e",
+      "section": 5,
+      "sort_order": 60,
+      "symbol": "wind",
+      "title": {
+        "en": "Sign of Fair Wind",
+        "ru": "Знак Попутного Ветра",
+        "uk": "Знак Попутного Вітру"
+      },
+      "description": {
+        "en": "Your thoughts were light and free. Ahead is a time of pleasant and rapid changes.",
+        "ru": "Твои мысли были легкими и свободными. Впереди — время приятных и быстрых перемен.",
+        "uk": "Твої думки були легкими та вільними. Попереду час приємних і швидких змін."
+      }
+    },
+    {
+      "id": "f474e53e-a05e-420d-8b22-2f985fc938f3",
+      "section": 5,
+      "sort_order": 61,
+      "symbol": "shield.fill",
+      "title": {
+        "en": "Stone Power Sign",
+        "ru": "Знак Силы Камня",
+        "uk": "Знак Сили каменю"
+      },
+      "description": {
+        "en": "Your loyalty to principles today has made you a support for others and a defense for yourself.",
+        "ru": "Твоя верность принципам сегодня сделала тебя опорой для других и защитой для себя.",
+        "uk": "Твоя вірність принципам сьогодні зробила тебе опорою для інших та захистом для себе."
+      }
+    },
+    {
+      "id": "e0c8f9b1-918e-4da9-af0c-cca9daadd56f",
+      "section": 5,
+      "sort_order": 62,
+      "symbol": "flame.fill",
+      "title": {
+        "en": "Sign of Inner Fire",
+        "ru": "Знак Внутреннего Огня",
+        "uk": "Знак Внутрішнього Вогню"
+      },
+      "description": {
+        "en": "Your passion for a good cause today will warm your home and attract like-minded people to you.",
+        "ru": "Твоя страсть к доброму делу сегодня согреет твой дом и привлечет к тебе единомышленников.",
+        "uk": "Твоя пристрасть до доброї справи сьогодні зігріє твій дім і приверне до тебе однодумців."
+      }
+    },
+    {
+      "id": "0d3add9e-7421-4570-a84d-e875dbf2d373",
+      "section": 5,
+      "sort_order": 63,
+      "symbol": "drop.fill",
+      "title": {
+        "en": "Sign of Clean Water",
+        "ru": "Знак Чистой Воды",
+        "uk": "Знак чистої води"
+      },
+      "description": {
+        "en": "Your honest admission of a mistake today nullified the past negativity. You are starting a new chapter.",
+        "ru": "Твое честное признание ошибки сегодня обнулило прошлый негатив. Ты начинаешь новую главу.",
+        "uk": "Твоє чесне зізнання помилки сьогодні обнулило минулий негатив. Ти починаєш новий розділ."
+      }
+    },
+    {
+      "id": "cb6e89d9-7a6b-47ac-b69a-245ec3226e41",
+      "section": 5,
+      "sort_order": 64,
+      "symbol": "leaf.fill",
+      "title": {
+        "en": "Blooming Garden Sign",
+        "ru": "Знак Цветущего Сада",
+        "uk": "Знак квітучого саду"
+      },
+      "description": {
+        "en": "Every little thing you do today is a flower. Soon your whole life will be filled with their scent.",
+        "ru": "Каждое твое маленькое дело сегодня — это цветок. Скоро вся твоя жизнь наполнится их ароматом.",
+        "uk": "Кожна твоя маленька справа сьогодні – це квітка. Скоро все твоє життя наповниться їхнім ароматом."
+      }
+    },
+    {
+      "id": "3e6c649e-8860-4780-b5a0-e0dc614edf54",
+      "section": 5,
+      "sort_order": 65,
+      "symbol": "moon.fill",
+      "title": {
+        "en": "Full Moon Sign",
+        "ru": "Знак Полной Луны",
+        "uk": "Знак Повного Місяця"
+      },
+      "description": {
+        "en": "Your calmness today is a light that will help others find their way in difficult times.",
+        "ru": "Твое спокойствие сегодня — это свет, который поможет другим найти дорогу в трудную минуту.",
+        "uk": "Твій спокій сьогодні — це світло, яке допоможе іншим знайти дорогу у скрутну хвилину."
+      }
+    },
+    {
+      "id": "27c9aa28-c964-4441-b6e1-8e0300738bfb",
+      "section": 5,
+      "sort_order": 66,
+      "symbol": "sunrise.fill",
+      "title": {
+        "en": "Rising Sun Sign",
+        "ru": "Знак Восходящего Солнца",
+        "uk": "Знак Сонця, що сходить"
+      },
+      "description": {
+        "en": "Your morning attitude determined your success. Tomorrow will be even brighter.",
+        "ru": "Твоя утренняя настройка определила твой успех. Завтрашний день будет еще светлее.",
+        "uk": "Твоє ранкове налаштування визначило твій успіх. Завтрашній день буде ще світлішим."
+      }
+    },
+    {
+      "id": "61b4e038-d8b9-4ced-b865-e25c7137c606",
+      "section": 5,
+      "sort_order": 67,
+      "symbol": "cloud.fill",
+      "title": {
+        "en": "Space Sign",
+        "ru": "Знак Пространства",
+        "uk": "Знак простору"
+      },
+      "description": {
+        "en": "Your realization that problems are temporary has removed their power over you. You are free.",
+        "ru": "Твое осознание, что проблемы временны, лишило их власти над тобой. Ты свободен.",
+        "uk": "Твоє усвідомлення, що проблеми тимчасові, позбавило їхньої влади над тобою. Ти вільний."
+      }
+    },
+    {
+      "id": "e0d3bb6b-50af-4f73-a64a-7c0c32484097",
+      "section": 5,
+      "sort_order": 68,
+      "symbol": "rainbow",
+      "title": {
+        "en": "Rainbow Sign",
+        "ru": "Знак Радуги",
+        "uk": "Знак Веселки"
+      },
+      "description": {
+        "en": "Your good deeds today have filled your life with bright colors and joy.",
+        "ru": "Твои добрые поступки сегодня наполнили твою жизнь яркими красками и радостью.",
+        "uk": "Твої добрі вчинки сьогодні наповнили твоє життя яскравими фарбами та радістю."
+      }
+    },
+    {
+      "id": "d8ab324a-0393-496e-b720-1ca42dd74562",
+      "section": 5,
+      "sort_order": 69,
+      "symbol": "leaf.circle.fill",
+      "title": {
+        "en": "Sign of a Rich Harvest",
+        "ru": "Знак Богатого Урожая",
+        "uk": "Знак Багатого врожаю"
+      },
+      "description": {
+        "en": "Your patient hard work today is a guarantee that your fruits will be juicy and abundant.",
+        "ru": "Твое терпеливое трудолюбие сегодня — это гарантия того, что твои плоды будут сочными и обильными.",
+        "uk": "Твоя терпляча працелюбність сьогодні — це гарантія того, що твої плоди будуть соковитими та рясними."
+      }
+    },
+    {
+      "id": "d1090723-73ae-4db4-8dcc-fa5c9fe08f91",
+      "section": 6,
+      "sort_order": 70,
+      "symbol": "fork.knife",
+      "title": {
+        "en": "Sign of a Tasty Life",
+        "ru": "Знак Вкусной Жизни",
+        "uk": "Знак Смачного Життя"
+      },
+      "description": {
+        "en": "You pleased your loved ones with food. Your care is the best investment in your future without loneliness.",
+        "ru": "Ты порадовал близких едой. Твоя забота — это лучший вклад в твое будущее без одиночества.",
+        "uk": "Ти порадував близьких їжею. Твоя турбота — це найкращий внесок у твоє майбутнє без самотності."
+      }
+    },
+    {
+      "id": "6c987ca5-5706-4297-bd38-202c429bc1f8",
+      "section": 6,
+      "sort_order": 71,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Clean Energy Sign",
+        "ru": "Знак Чистой Энергии",
+        "uk": "Знак чистої енергії"
+      },
+      "description": {
+        "en": "By clearing the space around you, you remove unnecessary noise from your head. Your path has become clear.",
+        "ru": "Очищая пространство вокруг, ты убираешь лишний шум из своей головы. Твой путь стал ясным.",
+        "uk": "Очищаючи простір довкола, ти прибираєш зайвий шум зі своєї голови. Твій шлях став ясним."
+      }
+    },
+    {
+      "id": "fc1eed10-0321-4f08-a055-268f65924e56",
+      "section": 6,
+      "sort_order": 72,
+      "symbol": "moon.zzz.fill",
+      "title": {
+        "en": "Quiet Zone Sign",
+        "ru": "Знак Зоны Покоя",
+        "uk": "Знак Зони спокою"
+      },
+      "description": {
+        "en": "Your meditation has created a space of silence. Now stress simply cannot find a place in you.",
+        "ru": "Твоя медитация создала пространство тишины. Теперь стресс просто не сможет найти в тебе место.",
+        "uk": "Твоя медитація створила простір тиші. Тепер стрес просто не зможе знайти у тобі місце."
+      }
+    },
+    {
+      "id": "5652e387-b393-4b24-903e-829586abb3e5",
+      "section": 6,
+      "sort_order": 73,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Sign of Connection of Generations",
+        "ru": "Знак Связи Поколений",
+        "uk": "Знак Зв'язку Поколінь"
+      },
+      "description": {
+        "en": "Your time with your family today is an investment in your long and happy future.",
+        "ru": "Твое время с семьей сегодня — это инвестиция в твое долгое и счастливое будущее.",
+        "uk": "Твій час із сім'єю сьогодні — це інвестиція у твоє довге та щасливе майбутнє."
+      }
+    },
+    {
+      "id": "694af692-a33d-42fc-affa-0f9b0e0b3fba",
+      "section": 6,
+      "sort_order": 74,
+      "symbol": "book.fill",
+      "title": {
+        "en": "New Horizons Sign",
+        "ru": "Знак Новых Горизонтов",
+        "uk": "Знак Нових Горизонтів"
+      },
+      "description": {
+        "en": "Your study of knowledge today is a torch that will light your path for many years to come.",
+        "ru": "Твое изучение знаний сегодня — это факел, который будет освещать тебе дорогу многие годы.",
+        "uk": "Твоє вивчення знань сьогодні — це смолоскип, який висвітлюватиме тобі дорогу багато років."
+      }
+    },
+    {
+      "id": "4299483d-3bd3-44ab-8f7b-7a9942a0b49f",
+      "section": 6,
+      "sort_order": 75,
+      "symbol": "sparkle",
+      "title": {
+        "en": "Sign of Random Miracle",
+        "ru": "Знак Случайного Чуда",
+        "uk": "Знак Випадкового Чуда"
+      },
+      "description": {
+        "en": "Your spontaneous kind gesture today is a powerful “bonus” that will work at the most necessary moment.",
+        "ru": "Твой спонтанный добрый жест сегодня — это мощный «бонус», который сработает в самый нужный момент.",
+        "uk": "Твій спонтанний добрий жест сьогодні — це потужний «бонус», який спрацює у потрібний момент."
+      }
+    },
+    {
+      "id": "2fe4309d-005f-4fd3-94b5-4f10b9b5f833",
+      "section": 6,
+      "sort_order": 76,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Sign of Care",
+        "ru": "Знак Бережности",
+        "uk": "Знак Бережності"
+      },
+      "description": {
+        "en": "Your mercy towards the smallest creature has added vitality and inner health to you.",
+        "ru": "Твое милосердие к самому маленькому существу добавило тебе жизненных сил и внутреннего здоровья.",
+        "uk": "Твоє милосердя до найменшої істоти додало тобі життєвих сил та внутрішнього здоров'я."
+      }
+    },
+    {
+      "id": "c1d0e3a6-c449-44c6-8972-c0207e99eb37",
+      "section": 6,
+      "sort_order": 77,
+      "symbol": "checkmark.shield.fill",
+      "title": {
+        "en": "Sign of a Solid Foundation",
+        "ru": "Знак Прочного Фундамента",
+        "uk": "Знак міцного фундаменту"
+      },
+      "description": {
+        "en": "Your honesty in small things today has built the foundation for great success in business tomorrow.",
+        "ru": "Твоя честность в мелочах сегодня построила базу для огромного успеха в делах завтра.",
+        "uk": "Твоя чесність у дрібницях сьогодні побудувала базу для величезного успіху у справах завтра."
+      }
+    },
+    {
+      "id": "7b715f2b-7bfe-48b2-88bb-f0dcc21ddba4",
+      "section": 6,
+      "sort_order": 78,
+      "symbol": "hand.thumbsup.fill",
+      "title": {
+        "en": "Peace Smile Sign",
+        "ru": "Знак Улыбки Мира",
+        "uk": "Знак Посмішки Миру"
+      },
+      "description": {
+        "en": "Your goodwill today has created a reason for the world to smile at you at every step.",
+        "ru": "Твоя доброжелательность сегодня создала причину для того, чтобы мир улыбался тебе на каждом шагу.",
+        "uk": "Твоя доброзичливість сьогодні створила причину, щоб світ усміхався тобі на кожному кроці."
+      }
+    },
+    {
+      "id": "f75615b8-1d53-4264-a16a-60ab6625c6e5",
+      "section": 6,
+      "sort_order": 79,
+      "symbol": "key.fill",
+      "title": {
+        "en": "Sign of the Key to Tomorrow",
+        "ru": "Знак Ключа к Завтра",
+        "uk": "Знак Ключа до Завтра"
+      },
+      "description": {
+        "en": "Your gratitude for today is the secret code that opens the door to a wonderful tomorrow.",
+        "ru": "Твоя благодарность за сегодняшний день — это секретный код, открывающий двери в прекрасное завтра.",
+        "uk": "Твоя подяка за сьогоднішній день - це секретний код, що відкриває двері у прекрасне завтра."
+      }
+    },
+    {
+      "id": "67d53ff0-4e90-49f7-8782-6120e6e37a7d",
+      "section": 7,
+      "sort_order": 80,
+      "symbol": "lightbulb.fill",
+      "title": {
+        "en": "Sign of the Creator",
+        "ru": "Знак Творца",
+        "uk": "Знак Творця"
+      },
+      "description": {
+        "en": "You realized that the world reflects your thoughts. Now you choose what your future will be like.",
+        "ru": "Ты понял, что мир отражает твои мысли. Теперь ты сам выбираешь, каким будет твое будущее.",
+        "uk": "Ти зрозумів, що світ відбиває твої думки. Тепер ти сам обираєш, яким буде твоє майбутнє."
+      }
+    },
+    {
+      "id": "8161eb6f-0d55-44f2-baed-63b75f142986",
+      "section": 7,
+      "sort_order": 81,
+      "symbol": "gemstone.fill",
+      "title": {
+        "en": "Diamond Shine Sign",
+        "ru": "Знак Алмазного Блеска",
+        "uk": "Знак алмазного блиску"
+      },
+      "description": {
+        "en": "You cut off unnecessary worries today. Your true power began to shine.",
+        "ru": "Ты отсек лишние тревоги сегодня. Твоя истинная сила начала сиять.",
+        "uk": "Ти відтяв зайві тривоги сьогодні. Твоя справжня сила почала сяяти."
+      }
+    },
+    {
+      "id": "74624497-5788-4036-9f8b-fd682f7c4b18",
+      "section": 7,
+      "sort_order": 82,
+      "symbol": "leaf.fill",
+      "title": {
+        "en": "Sign of the Fertile Field",
+        "ru": "Знак Плодородного Поля",
+        "uk": "Знак Родючого Поля"
+      },
+      "description": {
+        "en": "You put your energy into the best thing today. Expect results that exceed your expectations.",
+        "ru": "Ты сегодня вложил энергию в лучшее дело. Жди результатов, которые превзойдут ожидания.",
+        "uk": "Ти сьогодні вклав енергію у найкращу справу. Чекай на результати, які перевершать очікування."
+      }
+    },
+    {
+      "id": "96496aff-40b1-4fc1-a8f7-f176fc71a958",
+      "section": 7,
+      "sort_order": 83,
+      "symbol": "moon.zzz.fill",
+      "title": {
+        "en": "Sign of Peaceful Sleep",
+        "ru": "Знак Спокойного Сна",
+        "uk": "Знак Спокійного Сну"
+      },
+      "description": {
+        "en": "Your honesty today gives you deep rest and complete restoration of strength at night.",
+        "ru": "Твоя честность сегодня дарит тебе глубокий отдых и полное восстановление сил ночью.",
+        "uk": "Твоя чесність сьогодні дарує тобі глибокий відпочинок та повне відновлення сил уночі."
+      }
+    },
+    {
+      "id": "f00a6b53-b0b7-4ee7-a82f-79021c599dcf",
+      "section": 7,
+      "sort_order": 84,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Brave Heart Sign",
+        "ru": "Знак Смелого Сердца",
+        "uk": "Знак Сміливого Серця"
+      },
+      "description": {
+        "en": "You are not afraid of difficulties. Your spirit has become even stronger and more resilient.",
+        "ru": "Ты не испугался трудностей. Твой дух стал еще крепче и устойчивее.",
+        "uk": "Ти не злякався труднощів. Твій дух став ще міцнішим і стійкішим."
+      }
+    },
+    {
+      "id": "558630e0-fc2d-4e2e-adf9-04562a2392ae",
+      "section": 7,
+      "sort_order": 85,
+      "symbol": "figure.2.arms.open",
+      "title": {
+        "en": "Mutual Benefit Sign",
+        "ru": "Знак Взаимной Выручки",
+        "uk": "Знак Взаємної Виручки"
+      },
+      "description": {
+        "en": "Your help to others today is the boat that will carry you through any storms in life.",
+        "ru": "Твоя помощь другим сегодня — это лодка, которая перевезет тебя через любые жизненные штормы.",
+        "uk": "Твоя допомога іншим сьогодні – це човен, який перевезе тебе через будь-які життєві шторми."
+      }
+    },
+    {
+      "id": "5e73faf4-4b64-498d-935c-72abdc0d7e79",
+      "section": 7,
+      "sort_order": 86,
+      "symbol": "leaf.fill",
+      "title": {
+        "en": "Sign of Ripe Fruit",
+        "ru": "Знак Зрелого Плода",
+        "uk": "Знак зрілого плоду"
+      },
+      "description": {
+        "en": "Your patience is already bearing fruit. They are ripening and will soon be in your hands.",
+        "ru": "Твое терпение уже приносит плоды. Они созревают и скоро будут в твоих руках.",
+        "uk": "Твоє терпіння вже приносить плоди. Вони дозрівають і скоро будуть у твоїх руках."
+      }
+    },
+    {
+      "id": "5fa9fe55-febd-4c36-b1ee-05b58ef02705",
+      "section": 7,
+      "sort_order": 87,
+      "symbol": "location.fill",
+      "title": {
+        "en": "Sign of the True Compass",
+        "ru": "Знак Истинного Компаса",
+        "uk": "Знак Істинного Компасу"
+      },
+      "description": {
+        "en": "Your understanding of how your actions work is a navigator that will never let you down.",
+        "ru": "Твое понимание того, как работают твои поступки — это навигатор, который никогда не подведет.",
+        "uk": "Твоє розуміння того, як працюють твої вчинки, — це навігатор, який ніколи не підведе."
+      }
+    },
+    {
+      "id": "60e4db0a-4346-43d7-85fd-7c27604183e8",
+      "section": 7,
+      "sort_order": 88,
+      "symbol": "person.2.fill",
+      "title": {
+        "en": "Unity Sign",
+        "ru": "Знак Единства",
+        "uk": "Знак Єдності"
+      },
+      "description": {
+        "en": "By helping another, you helped yourself. Your potential for success today has increased significantly.",
+        "ru": "Помогая другому, ты помог себе. Твой потенциал успеха сегодня вырос в разы.",
+        "uk": "Допомагаючи іншому, ти допоміг собі. Твій потенціал успіху сьогодні зріс у рази."
+      }
+    },
+    {
+      "id": "63344f6c-ba00-4003-8ad7-6c0013566ab6",
+      "section": 7,
+      "sort_order": 89,
+      "symbol": "infinity",
+      "title": {
+        "en": "Sign of the Endless Flow",
+        "ru": "Знак Бесконечного Потока",
+        "uk": "Знак Нескінченного Потоку"
+      },
+      "description": {
+        "en": "Your good deeds today have flowed into the common river of goodness. You are part of something great and eternal.",
+        "ru": "Твои добрые дела сегодня влились в общую реку добра. Ты — часть чего-то великого и вечного.",
+        "uk": "Твої добрі справи сьогодні влилися у спільну річку добра. Ти частина чогось великого і вічного."
+      }
+    },
+    {
+      "id": "2b2bef35-ee1c-46a9-b1de-b1c66e06e0e9",
+      "section": 8,
+      "sort_order": 90,
+      "symbol": "sunrise.fill",
+      "title": {
+        "en": "Sign of Renewal",
+        "ru": "Знак Обновления",
+        "uk": "Знак Оновлення"
+      },
+      "description": {
+        "en": "Tomorrow you will wake up a new person. All past shadows are erased by your joy today.",
+        "ru": "Завтра ты проснешься новым человеком. Все прошлые тени стерты твоей сегодняшней радостью.",
+        "uk": "Завтра ти прокинешся новою людиною. Всі минулі тіні стерті твоєю радістю."
+      }
+    },
+    {
+      "id": "2a510b05-55ce-4234-9936-7a39c19b71e1",
+      "section": 8,
+      "sort_order": 91,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Sign of Conscious Living",
+        "ru": "Знак Осознанной Жизни",
+        "uk": "Знак Усвідомленого Життя"
+      },
+      "description": {
+        "en": "You lived this day, noticing every “seed”. You are the true author of your reality.",
+        "ru": "Ты прожил этот день, замечая каждое «семя». Ты — настоящий автор своей реальности.",
+        "uk": "Ти прожив цей день, помічаючи кожне сім'я. Ти справжній автор своєї реальності."
+      }
+    },
+    {
+      "id": "32d1ad53-6416-468d-8b60-d02f427d7148",
+      "section": 8,
+      "sort_order": 92,
+      "symbol": "ticket.fill",
+      "title": {
+        "en": "Lucky Ticket Sign",
+        "ru": "Знак Счастливого Билета",
+        "uk": "Знак Щасливого Квитка"
+      },
+      "description": {
+        "en": "Your seeds today have created the reason for incredible luck in the next 24 hours.",
+        "ru": "Твои сегодняшние семена создали причину для невероятной удачи в ближайшие сутки.",
+        "uk": "Твоє сьогоднішнє насіння створило причину для неймовірного успіху в найближчу добу."
+      }
+    },
+    {
+      "id": "ee5e0d86-7f38-4711-8c25-7c6683647892",
+      "section": 8,
+      "sort_order": 93,
+      "symbol": "heart.fill",
+      "title": {
+        "en": "Warm Wave Sign",
+        "ru": "Знак Теплой Волны",
+        "uk": "Знак Теплої Хвилі"
+      },
+      "description": {
+        "en": "Your love for your loved ones warmed the world today. Expect reciprocal tenderness and care.",
+        "ru": "Твоя любовь к близким сегодня согрела мир. Ожидай ответной нежности и заботы.",
+        "uk": "Твоя любов до близьких сьогодні зігріла світ. Чекай відповідь ніжності та турботи."
+      }
+    },
+    {
+      "id": "36eafa1f-f09e-4ae1-b5a5-c3fc5ecff2ae",
+      "section": 8,
+      "sort_order": 94,
+      "symbol": "face.smiling.fill",
+      "title": {
+        "en": "Sign of Joyful Immunity",
+        "ru": "Знак Радостного Иммунитета",
+        "uk": "Знак Радісного Імунітету"
+      },
+      "description": {
+        "en": "Your joy today is protection from any stress and negativity tomorrow.",
+        "ru": "Твое сорадование сегодня — это защита от любого стресса и негатива завтра.",
+        "uk": "Твоя радість сьогодні – це захист від будь-якого стресу та негативу завтра."
+      }
+    },
+    {
+      "id": "413b3e46-5522-4572-97e2-95e531f5d004",
+      "section": 8,
+      "sort_order": 95,
+      "symbol": "scope",
+      "title": {
+        "en": "Sign of Clear Intent",
+        "ru": "Знак Ясного Намерения",
+        "uk": "Знак Ясного Наміру"
+      },
+      "description": {
+        "en": "Your goals are pure and your heart is open. The whole Universe is now on your side.",
+        "ru": "Твои цели чисты, а сердце открыто. Вся Вселенная сейчас на твоей стороне.",
+        "uk": "Твої цілі чисті, а серце відчинене. Весь Всесвіт зараз на твоїй стороні."
+      }
+    },
+    {
+      "id": "0a424e19-0e2b-477d-a5ad-0e19bb223a3c",
+      "section": 8,
+      "sort_order": 96,
+      "symbol": "clock.fill",
+      "title": {
+        "en": "Sign of Precious Time",
+        "ru": "Знак Драгоценного Времени",
+        "uk": "Знак Дорогоцінного Часу"
+      },
+      "description": {
+        "en": "You haven't wasted a minute today. Your life is filled with deep meaning.",
+        "ru": "Ты не потратил сегодня ни минуты зря. Твоя жизнь наполнена глубоким смыслом.",
+        "uk": "Ти не витратив сьогодні жодної хвилини даремно. Твоє життя сповнене глибокого змісту."
+      }
+    },
+    {
+      "id": "9937e11e-416c-4897-a350-544a3e8a6250",
+      "section": 8,
+      "sort_order": 97,
+      "symbol": "balance.scale",
+      "title": {
+        "en": "Sign of Complete Balance",
+        "ru": "Знак Полного Баланса",
+        "uk": "Знак Повного Балансу"
+      },
+      "description": {
+        "en": "You took time for both your loved ones and yourself. Your path is harmonious and true.",
+        "ru": "Ты уделил время и близким, и себе. Твой путь гармоничен и верен.",
+        "uk": "Ти приділив час і близьким, і собі. Твій шлях гармонійний і вірний."
+      }
+    },
+    {
+      "id": "baf495e5-c186-4314-bba5-379a2a89a042",
+      "section": 8,
+      "sort_order": 98,
+      "symbol": "sparkles",
+      "title": {
+        "en": "Sign of Imminent Joy",
+        "ru": "Знак Скорой Радости",
+        "uk": "Знак швидкої радості"
+      },
+      "description": {
+        "en": "Your seeds were planted in very strong soil today. Expect good news very soon.",
+        "ru": "Твои семена сегодня были посажены в очень сильную почву. Жди хороших новостей совсем скоро.",
+        "uk": "Твоє насіння сьогодні було посаджено в дуже сильний ґрунт. Чекай хороших новин дуже скоро."
+      }
+    },
+    {
+      "id": "a30800f0-2dbe-4516-9892-56f00164062f",
+      "section": 8,
+      "sort_order": 99,
+      "symbol": "lightbulb.fill",
+      "title": {
+        "en": "Sign of the Inner Light",
+        "ru": "Знак Внутреннего Света",
+        "uk": "Знак Внутрішнього Світла"
+      },
+      "description": {
+        "en": "You end the day in joy. This is the true mastery of life.",
+        "ru": "Ты заканчиваешь день в радости. Это и есть самое настоящее мастерство жизни.",
+        "uk": "Ти закінчуєш день у радості. Це і є справжнісінька майстерність життя."
+      }
+    }
+  ]
+}
