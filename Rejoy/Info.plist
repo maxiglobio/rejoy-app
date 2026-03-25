@@ -26,18 +26,14 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Rejoy saves your activity stickers to your photo library when you tap Save.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ReJ uses the microphone to record voice dedications for your practice sessions.</string>
+	<string>Rejoy uses the microphone to record voice dedications for your practice sessions.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>ReJ uses speech recognition to transcribe your dedication when you save a session.</string>
+	<string>Rejoy uses speech recognition to transcribe your dedication when you save a session.</string>
 	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
