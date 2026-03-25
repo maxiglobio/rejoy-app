@@ -55,6 +55,30 @@ enum L {
             : String(format: string("duration_h", language: language), h)
     }
 
+    /// Formats a duration from seconds (avoids showing "0m" for 1–59s slices; used for per-session timeline rows).
+    static func formattedDurationFromSeconds(_ totalSeconds: Int, language: String) -> String {
+        let s = max(0, totalSeconds)
+        if s == 0 {
+            return formattedDuration(minutes: 0, language: language)
+        }
+        if s < 60 {
+            return String(format: string("duration_seconds", language: language), s)
+        }
+        let minutes = s / 60
+        let rem = s % 60
+        if rem == 0 {
+            return formattedDuration(minutes: minutes, language: language)
+        }
+        return String(format: string("duration_min_sec", language: language), minutes, rem)
+    }
+
+    /// Whole minutes only for finished-activity timeline (ceil); includes manually adjusted duration once attributed span matches save.
+    static func formattedTimelineMinutes(_ totalSeconds: Int, language: String) -> String {
+        let s = max(0, totalSeconds)
+        let minutes = (s + 59) / 60
+        return formattedDuration(minutes: minutes, language: language)
+    }
+
     /// Returns localized activity name for built-in activities; returns original name for custom activities.
     static func activityName(_ name: String, language: String) -> String {
         let key = "activity_\(name.lowercased().replacingOccurrences(of: " ", with: "_"))"
@@ -155,7 +179,12 @@ enum L {
             "open_settings": "Open Settings",
             "notifications_required": "Notifications Required",
             "notifications_required_message": "Allow notifications in Settings > Rejoy > Notifications for the meditation alarm to work.",
-            "permissions_intro": "Enable these for the best experience. You can change them later in Settings.",
+            "permissions_intro": "Notifications let friends send you nudges and Rejoy can remind you about practice. You can change this later in Settings.",
+            "permissions_continue": "Continue",
+            "voice_permissions_intro": "To record a voice dedication, Rejoy needs the microphone and speech recognition. Tap Continue, then allow each permission when iOS asks.",
+            "voice_permissions_tap_mic_hint": "Tap the microphone. iOS will ask for microphone and speech recognition access.",
+            "voice_permissions_allow_when_prompted": "Allow each permission when iOS asks, then tap the microphone to record.",
+            "voice_permissions_denied_hint": "Voice dedications need Microphone and Speech Recognition. You can type below, or open Settings to allow access.",
             "skip_for_now": "Skip for now",
             "continue_as_guest": "Continue as Guest",
             "sign_in_with_apple": "Sign in with Apple",
@@ -176,6 +205,7 @@ enum L {
             "tap_to_stop": "Tap to stop",
             "adjust_duration": "Adjust Duration",
             "adjust_duration_hint": "Add or remove minutes below",
+            "duration_adjust_total_minutes": "%d min",
             "duration_adjust_min": "- %d min",
             "duration_adjust_plus": "+ %d min",
             "session": "Session",
@@ -195,6 +225,8 @@ enum L {
             "stop": "Stop",
             "seeds_planted_count": "%d seeds planted",
             "duration_min": "%dm",
+            "duration_seconds": "%ds",
+            "duration_min_sec": "%dm %ds",
             "duration_h": "%dh",
             "duration_h_min": "%dh %dm",
             "rejoy_meditation_time": "Rejoy Meditation",
@@ -273,6 +305,11 @@ enum L {
             "log_out": "Log Out",
             "log_out_confirm": "Log Out?",
             "log_out_confirm_message": "Your local data will be kept. You can sign in again anytime.",
+            "delete_account": "Delete Account",
+            "delete_account_footer": "Permanently removes your cloud profile, sessions, group memberships, and settings. Activity data stored on this device will also be cleared.",
+            "delete_account_confirm": "Delete account?",
+            "delete_account_confirm_message": "This cannot be undone. Your account and data on our servers will be removed. Signing in with Apple again will create a new account.",
+            "delete_account_error": "We could not complete account deletion. Check your internet connection and try again. If the problem continues, contact support.",
             "achievement_save": "Got it",
             "achievement_unlocked": "Unlocked!",
             "achievement_unlocked_on": "Unlocked on",
@@ -430,7 +467,12 @@ enum L {
             "open_settings": "Открыть настройки",
             "notifications_required": "Требуются уведомления",
             "notifications_required_message": "Разрешите уведомления в Настройки > Rejoy > Уведомления, чтобы работал будильник медитации.",
-            "permissions_intro": "Включите для лучшего опыта. Можно изменить позже в настройках.",
+            "permissions_intro": "Уведомления позволяют друзьям присылать подталкивания, а Rejoy — напоминать о практике. Это можно изменить позже в настройках.",
+            "permissions_continue": "Продолжить",
+            "voice_permissions_intro": "Для записи голосового посвящения Rejoy нужны микрофон и распознавание речи. Нажмите «Продолжить», затем разрешите каждый доступ в запросах iOS.",
+            "voice_permissions_tap_mic_hint": "Нажмите «Микрофон». iOS запросит доступ к микрофону и распознаванию речи.",
+            "voice_permissions_allow_when_prompted": "Разрешите доступ в запросах iOS, затем снова нажмите микрофон для записи.",
+            "voice_permissions_denied_hint": "Для голосовых посвящений нужны микрофон и распознавание речи. Можно ввести текст ниже или открыть Настройки и разрешить доступ.",
             "skip_for_now": "Пропустить",
             "continue_as_guest": "Продолжить как гость",
             "sign_in_with_apple": "Войти через Apple",
@@ -451,6 +493,7 @@ enum L {
             "tap_to_stop": "Нажмите для остановки",
             "adjust_duration": "Изменить длительность",
             "adjust_duration_hint": "Добавьте или уберите минуты ниже",
+            "duration_adjust_total_minutes": "%d мин",
             "duration_adjust_min": "- %d мин",
             "duration_adjust_plus": "+ %d мин",
             "session": "Сессия",
@@ -470,6 +513,8 @@ enum L {
             "stop": "Стоп",
             "seeds_planted_count": "%d семян посажено",
             "duration_min": "%dмин",
+            "duration_seconds": "%d с",
+            "duration_min_sec": "%d мин %d с",
             "duration_h": "%dч",
             "duration_h_min": "%dч %dмин",
             "rejoy_meditation_time": "Rejoy Медитация",
@@ -549,6 +594,11 @@ enum L {
             "log_out": "Выйти",
             "log_out_confirm": "Выйти?",
             "log_out_confirm_message": "Локальные данные сохранятся. Вы можете войти снова в любое время.",
+            "delete_account": "Удалить аккаунт",
+            "delete_account_footer": "Безвозвратно удаляет облачный профиль, сессии, участие в группах и настройки. Данные активности на этом устройстве также будут очищены.",
+            "delete_account_confirm": "Удалить аккаунт?",
+            "delete_account_confirm_message": "Это действие нельзя отменить. Аккаунт и данные на наших серверах будут удалены. Повторный вход через Apple создаст новый аккаунт.",
+            "delete_account_error": "Не удалось удалить аккаунт. Проверьте подключение к интернету и попробуйте снова. Если проблема сохранится, обратитесь в поддержку.",
             "achievement_save": "Понятно",
             "achievement_unlocked_on": "Разблокировано",
             "achievement_section_title": "Награды",
@@ -707,7 +757,12 @@ enum L {
             "open_settings": "Відкрити налаштування",
             "notifications_required": "Потрібні сповіщення",
             "notifications_required_message": "Дозвольте сповіщення в Налаштування > Rejoy > Сповіщення, щоб працював будильник медитації.",
-            "permissions_intro": "Увімкніть для кращого досвіду. Можна змінити пізніше в налаштуваннях.",
+            "permissions_intro": "Сповіщення дозволяють друзям надсилати підштовхування, а Rejoy — нагадувати про практику. Це можна змінити пізніше в налаштуваннях.",
+            "permissions_continue": "Далі",
+            "voice_permissions_intro": "Щоб записати голосове присвячення, Rejoy потрібні мікрофон і розпізнавання мовлення. Натисніть «Далі», потім дозвольте кожен доступ у запитах iOS.",
+            "voice_permissions_tap_mic_hint": "Натисніть «Мікрофон». iOS запитає доступ до мікрофона й розпізнавання мовлення.",
+            "voice_permissions_allow_when_prompted": "Дозвольте доступ у запитах iOS, потім знову натисніть мікрофон для запису.",
+            "voice_permissions_denied_hint": "Для голосових присвячень потрібні мікрофон і розпізнавання мовлення. Можна ввести текст нижче або відкрити Налаштування й дозволити доступ.",
             "skip_for_now": "Пропустити",
             "continue_as_guest": "Продовжити як гість",
             "sign_in_with_apple": "Увійти через Apple",
@@ -728,6 +783,7 @@ enum L {
             "tap_to_stop": "Натисніть для зупинки",
             "adjust_duration": "Змінити тривалість",
             "adjust_duration_hint": "Додайте або заберіть хвилини нижче",
+            "duration_adjust_total_minutes": "%d хв",
             "duration_adjust_min": "- %d хв",
             "duration_adjust_plus": "+ %d хв",
             "session": "Сесія",
@@ -747,6 +803,8 @@ enum L {
             "stop": "Стоп",
             "seeds_planted_count": "%d зерен посаджено",
             "duration_min": "%dхв",
+            "duration_seconds": "%d с",
+            "duration_min_sec": "%d хв %d с",
             "duration_h": "%dгод",
             "duration_h_min": "%dгод %dхв",
             "rejoy_meditation_time": "Rejoy Медитація",
@@ -825,6 +883,11 @@ enum L {
             "log_out": "Вийти",
             "log_out_confirm": "Вийти?",
             "log_out_confirm_message": "Локальні дані збережуться. Ви можете увійти знову в будь-який час.",
+            "delete_account": "Видалити обліковий запис",
+            "delete_account_footer": "Безповоротно видаляє хмарний профіль, сесії, участь у групах і налаштування. Дані активності на цьому пристрої також буде очищено.",
+            "delete_account_confirm": "Видалити обліковий запис?",
+            "delete_account_confirm_message": "Цю дію не скасувати. Обліковий запис і дані на наших серверах буде видалено. Повторний вхід через Apple створить новий обліковий запис.",
+            "delete_account_error": "Не вдалося видалити обліковий запис. Перевірте підключення до інтернету й спробуйте знову. Якщо проблема залишиться, зверніться до підтримки.",
             "achievement_save": "Зрозуміло",
             "achievement_unlocked": "Розблоковано!",
             "achievement_unlocked_on": "Розблоковано",

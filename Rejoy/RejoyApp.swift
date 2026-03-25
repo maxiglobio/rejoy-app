@@ -77,14 +77,9 @@ struct RootContentView: View {
         Group {
             if authService.isSignedIn {
                 if !hasSeenPermissions {
-                    PermissionsView(
-                        onContinue: {
-                            hasSeenPermissions = true
-                        },
-                        onSkip: {
-                            hasSeenPermissions = true
-                        }
-                    )
+                    PermissionsView {
+                        hasSeenPermissions = true
+                    }
                 } else {
                     MainTabView()
                 }

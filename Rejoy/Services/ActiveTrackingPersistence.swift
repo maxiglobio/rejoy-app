@@ -6,6 +6,7 @@ enum ActiveTrackingPersistence {
     private static let suiteName = WidgetSharedData.appGroupId
     private static let activityIdKey = "activeTracking_activityId"
     private static let startDateKey = "activeTracking_startDate"
+    private static let firstWallClockStartKey = "activeTracking_firstWallClockStart"
     private static let totalPausedSecondsKey = "activeTracking_totalPausedSeconds"
     private static let isPausedKey = "activeTracking_isPaused"
 
@@ -16,13 +17,15 @@ enum ActiveTrackingPersistence {
     struct PersistedSession {
         let activityId: UUID
         let startDate: Date
+        let firstWallClockStart: Date
         let totalPausedSeconds: Int
         let isPaused: Bool
     }
 
-    static func save(activityId: UUID, startDate: Date, totalPausedSeconds: Int, isPaused: Bool) {
+    static func save(activityId: UUID, startDate: Date, firstWallClockStart: Date, totalPausedSeconds: Int, isPaused: Bool) {
         defaults?.set(activityId.uuidString, forKey: activityIdKey)
         defaults?.set(startDate.timeIntervalSince1970, forKey: startDateKey)
+        defaults?.set(firstWallClockStart.timeIntervalSince1970, forKey: firstWallClockStartKey)
         defaults?.set(totalPausedSeconds, forKey: totalPausedSecondsKey)
         defaults?.set(isPaused, forKey: isPausedKey)
     }
@@ -35,9 +38,17 @@ enum ActiveTrackingPersistence {
         }
         let totalPaused = defaults?.integer(forKey: totalPausedSecondsKey) ?? 0
         let isPaused = defaults?.bool(forKey: isPausedKey) ?? false
+        let startDate = Date(timeIntervalSince1970: startInterval)
+        let wallStart: Date
+        if let wallInterval = defaults?.object(forKey: firstWallClockStartKey) as? TimeInterval {
+            wallStart = Date(timeIntervalSince1970: wallInterval)
+        } else {
+            wallStart = startDate
+        }
         return PersistedSession(
             activityId: id,
-            startDate: Date(timeIntervalSince1970: startInterval),
+            startDate: startDate,
+            firstWallClockStart: wallStart,
             totalPausedSeconds: totalPaused,
             isPaused: isPaused
         )
@@ -46,6 +57,7 @@ enum ActiveTrackingPersistence {
     static func clear() {
         defaults?.removeObject(forKey: activityIdKey)
         defaults?.removeObject(forKey: startDateKey)
+        defaults?.removeObject(forKey: firstWallClockStartKey)
         defaults?.removeObject(forKey: totalPausedSecondsKey)
         defaults?.removeObject(forKey: isPausedKey)
     }

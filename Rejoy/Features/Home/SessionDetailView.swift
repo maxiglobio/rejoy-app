@@ -37,7 +37,7 @@ struct SessionDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(activity.map { L.activityName($0.name, language: appLanguage) } ?? L.string("activity", language: appLanguage))
                             .font(AppFont.headline)
-                        Text("\(L.formattedDuration(minutes: session.durationSeconds / 60, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), session.seeds))")
+                        Text("\(L.formattedTimelineMinutes(session.durationSeconds, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), session.seeds))")
                             .font(AppFont.subheadline)
                             .foregroundStyle(AppColors.dotsSecondaryText)
                     }

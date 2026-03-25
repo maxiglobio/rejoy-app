@@ -21,16 +21,8 @@
 		<key>UIColorName</key>
 		<string>AccentColor</string>
 	</dict>
-	<key>NSHealthShareUsageDescription</key>
-	<string>Rejoy uses health data to track workouts, steps, exercise time, mindful sessions, and sleep for your daily dedication summary.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>Rejoy may save dedication data to Health.</string>
 	<key>NSMotionUsageDescription</key>
-	<string>Rejoy uses motion data to estimate walking and running time for your daily summary.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Rejoy uses location to estimate time spent at your saved places (e.g. Home, Temple).</string>
-	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Rejoy reads calendar events to include meeting and event time in your daily dedication summary.</string>
+	<string>Rejoy uses device motion to gently tilt the seeds jar and welcome visuals as you move your phone.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Rejoy saves your activity stickers to your photo library when you tap Save.</string>
 	<key>NSMicrophoneUsageDescription</key>

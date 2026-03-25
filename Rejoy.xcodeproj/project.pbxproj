@@ -30,6 +30,7 @@
 		A1000000000000000000003C /* RejoyMeditationCarouselSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003C /* RejoyMeditationCarouselSheet.swift */; };
 		A10000000000000000000029 /* AdjustDurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AdjustDurationView.swift */; };
 		A1000000000000000000002A /* DedicationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* DedicationView.swift */; };
+		A10000000000000000000054 /* RecordingAmbienceBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* RecordingAmbienceBackground.swift */; };
 		A1000000000000000000002B /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* SessionDetailView.swift */; };
 		A1000000000000000000002C /* DedicationRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* DedicationRecorder.swift */; };
 		A1000000000000000000002D /* AccelerometerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* AccelerometerService.swift */; };
@@ -54,6 +55,7 @@
 		A10000000000000000000035 /* WidgetSharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* WidgetSharedData.swift */; };
 		A10000000000000000000036 /* RejoyTrackingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* RejoyTrackingActivity.swift */; };
 		A10000000000000000000037 /* ActiveTrackingPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* ActiveTrackingPersistence.swift */; };
+		A10000000000000000000053 /* SessionDayAttribution.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000053 /* SessionDayAttribution.swift */; };
 		A10000000000000000000038 /* StoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000038 /* StoryItem.swift */; };
 		A10000000000000000000039 /* IntroCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* IntroCarouselView.swift */; };
 		A1000000000000000000003A /* StoriesSeedsScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003A /* StoriesSeedsScene.swift */; };
@@ -145,6 +147,7 @@
 		A20000000000000000000028 /* ActiveTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTrackingView.swift; sourceTree = "<group>"; };
 		A20000000000000000000029 /* AdjustDurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdjustDurationView.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* DedicationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedicationView.swift; sourceTree = "<group>"; };
+		A20000000000000000000054 /* RecordingAmbienceBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingAmbienceBackground.swift; sourceTree = "<group>"; };
 		A2000000000000000000002B /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		A2000000000000000000002C /* DedicationRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedicationRecorder.swift; sourceTree = "<group>"; };
 		A2000000000000000000002D /* AccelerometerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccelerometerService.swift; sourceTree = "<group>"; };
@@ -169,6 +172,7 @@
 		A20000000000000000000035 /* WidgetSharedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSharedData.swift; sourceTree = "<group>"; };
 		A20000000000000000000036 /* RejoyTrackingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RejoyTrackingActivity.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* ActiveTrackingPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTrackingPersistence.swift; sourceTree = "<group>"; };
+		A20000000000000000000053 /* SessionDayAttribution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDayAttribution.swift; sourceTree = "<group>"; };
 		A20000000000000000000038 /* StoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryItem.swift; sourceTree = "<group>"; };
 		A20000000000000000000039 /* IntroCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCarouselView.swift; sourceTree = "<group>"; };
 		A2000000000000000000003A /* StoriesSeedsScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoriesSeedsScene.swift; sourceTree = "<group>"; };
@@ -308,6 +312,7 @@
 				A20000000000000000000035 /* WidgetSharedData.swift */,
 				A20000000000000000000036 /* RejoyTrackingActivity.swift */,
 				A20000000000000000000037 /* ActiveTrackingPersistence.swift */,
+				A20000000000000000000053 /* SessionDayAttribution.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -324,9 +329,7 @@
 				D50000000000000000000002 /* DIP */,
 				D50000000000000000000003 /* Altar */,
 				A50000000000000000000009 /* Onboarding */,
-				A5000000000000000000000A /* Intentions */,
 				A5000000000000000000000B /* Summary */,
-				A5000000000000000000000C /* ManualEntry */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -388,26 +391,12 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		A5000000000000000000000A /* Intentions */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Intentions;
-			sourceTree = "<group>";
-		};
 		A5000000000000000000000B /* Summary */ = {
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000026 /* ConfettiView.swift */,
 			);
 			path = Summary;
-			sourceTree = "<group>";
-		};
-		A5000000000000000000000C /* ManualEntry */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ManualEntry;
 			sourceTree = "<group>";
 		};
 		A50000000000000000000014 /* Sangha */ = {
@@ -482,6 +471,7 @@
 				A2000000000000000000003B /* ActiveTrackingSession.swift */,
 				A20000000000000000000029 /* AdjustDurationView.swift */,
 				A2000000000000000000002A /* DedicationView.swift */,
+				A20000000000000000000054 /* RecordingAmbienceBackground.swift */,
 			);
 			path = Tracking;
 			sourceTree = "<group>";
@@ -629,6 +619,7 @@
 				A1000000000000000000003C /* RejoyMeditationCarouselSheet.swift in Sources */,
 				A10000000000000000000029 /* AdjustDurationView.swift in Sources */,
 				A1000000000000000000002A /* DedicationView.swift in Sources */,
+				A10000000000000000000054 /* RecordingAmbienceBackground.swift in Sources */,
 				A1000000000000000000002B /* SessionDetailView.swift in Sources */,
 				A1000000000000000000002C /* DedicationRecorder.swift in Sources */,
 				A1000000000000000000002D /* AccelerometerService.swift in Sources */,
@@ -653,6 +644,7 @@
 				A10000000000000000000035 /* WidgetSharedData.swift in Sources */,
 				A10000000000000000000036 /* RejoyTrackingActivity.swift in Sources */,
 				A10000000000000000000037 /* ActiveTrackingPersistence.swift in Sources */,
+				A10000000000000000000053 /* SessionDayAttribution.swift in Sources */,
 				A10000000000000000000038 /* StoryItem.swift in Sources */,
 				A10000000000000000000039 /* IntroCarouselView.swift in Sources */,
 				A1000000000000000000003A /* StoriesSeedsScene.swift in Sources */,

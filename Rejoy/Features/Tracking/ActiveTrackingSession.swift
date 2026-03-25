@@ -7,6 +7,8 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
         lhs === rhs
     }
     let activity: ActivityType
+    /// Wall-clock moment the activity was first started (unchanged across pause/resume segment resets).
+    let firstWallClockStart: Date
 
     @Published var startDate: Date
     @Published var totalPausedSeconds: Int
@@ -20,8 +22,9 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
     var displayedSeconds: Int { isPaused ? totalPausedSeconds : elapsedSeconds }
     var seeds: Int { displayedSeconds * seedsPerSecond }
 
-    init(activity: ActivityType, startDate: Date, totalPausedSeconds: Int = 0, isPaused: Bool = false) {
+    init(activity: ActivityType, startDate: Date, firstWallClockStart: Date? = nil, totalPausedSeconds: Int = 0, isPaused: Bool = false) {
         self.activity = activity
+        self.firstWallClockStart = firstWallClockStart ?? startDate
         self.startDate = startDate
         self.totalPausedSeconds = totalPausedSeconds
         self.isPaused = isPaused
@@ -74,6 +77,7 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
         ActiveTrackingPersistence.save(
             activityId: activity.id,
             startDate: startDate,
+            firstWallClockStart: firstWallClockStart,
             totalPausedSeconds: totalPausedSeconds,
             isPaused: isPaused
         )

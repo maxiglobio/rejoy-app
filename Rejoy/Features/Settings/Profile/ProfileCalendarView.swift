@@ -47,7 +47,9 @@ struct ProfileCalendarView: View {
 
     private func state(for date: Date) -> DayActivityState {
         let startOfDay = calendar.startOfDay(for: date)
-        let sessions = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: startOfDay) }
+        let sessions = allSessions.filter {
+            SessionDayAttribution.sessionPortion($0, on: startOfDay, calendar: calendar).seconds > 0
+        }
         if sessions.isEmpty { return .empty }
         if sessions.allSatisfy({ rejoyedIds.contains($0.id) }) { return .complete }
         return .partial

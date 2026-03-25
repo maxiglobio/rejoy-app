@@ -29,7 +29,6 @@ struct SettingsView: View {
     @State private var recognitionLocale: String = AppSettings.recognitionLocaleIdentifier
     @State private var meditationEnabled: Bool = false
     @State private var showNotificationDeniedAlert = false
-    @State private var showLogOutAlert = false
     @State private var showHowToUseRejoyCarousel = false
     @State private var showRejoyMeditationCarousel = false
     @State private var showSeedsInfoCarousel = false
@@ -56,9 +55,9 @@ struct SettingsView: View {
         let cal = Calendar.current
         guard let start = cal.date(from: cal.dateComponents([.year, .month], from: date)),
               let end = cal.date(byAdding: .month, value: 1, to: start) else { return 0 }
-        return allSessions
-            .filter { $0.startDate >= start && $0.startDate < end }
-            .reduce(0) { $0 + $1.seeds }
+        return allSessions.reduce(0) { partial, session in
+            partial + SessionDayAttribution.attributedSeeds(for: session, inMonthStartingAt: start, calendar: cal)
+        }
     }
 
     private var monthSeeds: Int {
@@ -145,7 +144,7 @@ struct SettingsView: View {
                     howToUseRejoyCard
                     howToMeditateCard
                     whatIsSeedsCard
-                    logoutCard
+                    accountCard
                     profileFooter
                 }
                 .padding(.horizontal, 20)
@@ -350,21 +349,6 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }
-            .alert(L.string("log_out_confirm", language: appLanguageStorage), isPresented: $showLogOutAlert) {
-                Button(L.string("log_out", language: appLanguageStorage), role: .destructive) {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    Task {
-                        try? await SupabaseService.shared.signOut()
-                        await MainActor.run {
-                            hasSeenWelcome = false
-                            hasCompletedStories = false
-                        }
-                    }
-                }
-                Button(L.string("cancel", language: appLanguageStorage), role: .cancel) { }
-            } message: {
-                Text(L.string("log_out_confirm_message", language: appLanguageStorage))
             }
             .alert(L.string("notifications_required", language: appLanguageStorage), isPresented: $showNotificationDeniedAlert) {
                 Button(L.string("open_settings", language: appLanguageStorage)) {
@@ -729,16 +713,21 @@ struct SettingsView: View {
         }
     }
 
-    private var logoutCard: some View {
-        Button {
-            showLogOutAlert = true
+    private var accountCard: some View {
+        NavigationLink {
+            SettingsAccountView()
         } label: {
-            Text(L.string("log_out", language: appLanguageStorage))
-                .font(AppFont.rounded(size: 18, weight: .regular))
-                .foregroundStyle(.red)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 14)
+            HStack {
+                Text(L.string("account", language: appLanguageStorage))
+                    .font(AppFont.rounded(size: 18, weight: .regular))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(AppFont.rounded(size: 14, weight: .semibold))
+                    .foregroundStyle(AppColors.trailing)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
         }
         .buttonStyle(.plain)
         .background(AppColors.cardBackground)
@@ -1120,7 +1109,8 @@ struct PermissionStatusRow: View {
     let icon: String
     let status: PermissionStatus
     let language: String
-    let onEnable: () -> Void
+    /// Invoked for microphone, speech, or notifications when status is not yet determined (shows system request).
+    let onContinueToSystemRequest: () -> Void
 
     var body: some View {
         HStack {
@@ -1143,9 +1133,10 @@ struct PermissionStatusRow: View {
                 Link(L.string("open_settings", language: language), destination: URL(string: UIApplication.openSettingsURLString)!)
                     .font(AppFont.caption)
             } else {
-                Button(L.string("enable", language: language)) {
+                // Guideline 5.1.1(iv): use neutral labels (Continue / Next), not "Enable", before system permission sheets.
+                Button(L.string("permissions_continue", language: language)) {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    onEnable()
+                    onContinueToSystemRequest()
                 }
                 .font(AppFont.caption)
             }

@@ -6,6 +6,8 @@ struct PendingSession: Identifiable {
     let id = UUID()
     let activity: ActivityType
     var durationSeconds: Int
+    /// True wall-clock start of the tracked activity (first segment), for correct multi-day `Session` span.
+    let wallClockStart: Date
 }
 
 struct MainTabView: View {
@@ -119,7 +121,7 @@ struct MainTabView: View {
                         activeSession = nil
                         showTracking = nil
                         restoredTrackingState = nil
-                        showAdjustAndDedication = PendingSession(activity: activity, durationSeconds: duration)
+                        showAdjustAndDedication = PendingSession(activity: activity, durationSeconds: duration, wallClockStart: session.firstWallClockStart)
                     }
                 })
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -167,11 +169,11 @@ struct MainTabView: View {
         .fullScreenCover(item: $showAdjustAndDedication) { pending in
             AdjustDurationView(activity: pending.activity, durationSeconds: pending.durationSeconds) { adjustedDuration in
                 showAdjustAndDedication = nil
-                showDedication = PendingSession(activity: pending.activity, durationSeconds: adjustedDuration)
+                showDedication = PendingSession(activity: pending.activity, durationSeconds: adjustedDuration, wallClockStart: pending.wallClockStart)
             }
         }
         .fullScreenCover(item: $showDedication) { pending in
-            DedicationView(activity: pending.activity, durationSeconds: pending.durationSeconds, seedsJarCoordinator: seedsJarCoordinator, defaultDedicationText: L.string("dedication_default", language: appLanguage)) {
+            DedicationView(activity: pending.activity, durationSeconds: pending.durationSeconds, wallClockStart: pending.wallClockStart, seedsJarCoordinator: seedsJarCoordinator, defaultDedicationText: L.string("dedication_default", language: appLanguage)) {
                 showDedication = nil
             }
         }
@@ -185,7 +187,9 @@ struct MainTabView: View {
         guard rejoyReminderLastShownDate != today else { return false }
         let calendar = Calendar.current
         let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-        let yesterdaySessions = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: yesterday) }
+        let startOfYesterday = calendar.startOfDay(for: yesterday)
+        guard let endOfYesterday = calendar.date(byAdding: .day, value: 1, to: startOfYesterday) else { return false }
+        let yesterdaySessions = allSessions.filter { $0.startDate < endOfYesterday && $0.endDate > startOfYesterday }
         guard !yesterdaySessions.isEmpty else { return false }
         let rejoyedIds = Set(rejoyedIdsRaw.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
         let unrejoyed = yesterdaySessions.filter { !rejoyedIds.contains($0.id) }
@@ -206,12 +210,13 @@ struct MainTabView: View {
         activeSession = ActiveTrackingSession(
             activity: activity,
             startDate: persisted.startDate,
+            firstWallClockStart: persisted.firstWallClockStart,
             totalPausedSeconds: persisted.totalPausedSeconds,
             isPaused: persisted.isPaused
         )
         isTrackingCollapsed = false
         Task {
-            try? await SanghaService.shared.setActiveTracking(activityTypeId: activity.id, startedAt: persisted.startDate)
+            try? await SanghaService.shared.setActiveTracking(activityTypeId: activity.id, startedAt: persisted.firstWallClockStart)
         }
     }
 }

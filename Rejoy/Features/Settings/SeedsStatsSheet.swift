@@ -14,11 +14,10 @@ struct SeedsStatsSheet: View {
         let now = Date()
         guard let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) else { return [] }
         for i in 0..<monthsToShow {
-            guard let monthStart = calendar.date(byAdding: .month, value: -i, to: startOfCurrentMonth),
-                  let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else { continue }
-            let seeds = allSessions
-                .filter { $0.startDate >= monthStart && $0.startDate < monthEnd }
-                .reduce(0) { $0 + $1.seeds }
+            guard let monthStart = calendar.date(byAdding: .month, value: -i, to: startOfCurrentMonth) else { continue }
+            let seeds = allSessions.reduce(0) { partial, session in
+                partial + SessionDayAttribution.attributedSeeds(for: session, inMonthStartingAt: monthStart, calendar: calendar)
+            }
             result.append((monthStart, seeds))
         }
         return result

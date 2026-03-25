@@ -77,14 +77,17 @@ struct AdjustDurationView: View {
         .buttonStyle(.plain)
     }
 
+    /// Whole minutes only (no seconds); underlying `durationSeconds` is unchanged.
     private func formattedTime(_ seconds: Int) -> String {
-        let h = seconds / 3600
-        let m = (seconds % 3600) / 60
-        let s = seconds % 60
-        if h >= 1 {
-            return String(format: "%d:%02d:%02d", h, m, s)
-        } else {
-            return String(format: "%02d:%02d", m, s)
+        let total = max(0, seconds)
+        let displayMinutes = total / 60
+        if displayMinutes < 60 {
+            return String(format: L.string("duration_adjust_total_minutes", language: appLanguage), displayMinutes)
         }
+        let h = displayMinutes / 60
+        let m = displayMinutes % 60
+        return m > 0
+            ? String(format: L.string("duration_h_min", language: appLanguage), h, m)
+            : String(format: L.string("duration_h", language: appLanguage), h)
     }
 }

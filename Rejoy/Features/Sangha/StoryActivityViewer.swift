@@ -227,12 +227,39 @@ private struct StoryActivityCard: View {
         return L.string("partner", language: appLanguage)
     }
 
+    private var dayStart: Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
     private var completedSeeds: Int {
-        sessions.reduce(0) { $0 + $1.seeds }
+        let cal = Calendar.current
+        let start = dayStart
+        return sessions.reduce(0) { partial, row in
+            partial + SessionDayAttribution.portion(
+                on: start,
+                start: row.startDate,
+                end: row.endDate,
+                durationSeconds: row.durationSeconds,
+                totalSeeds: row.seeds,
+                calendar: cal
+            ).seeds
+        }
     }
 
     private var completedMinutes: Int {
-        sessions.reduce(0) { $0 + $1.durationSeconds } / 60
+        let cal = Calendar.current
+        let start = dayStart
+        let secs = sessions.reduce(0) { partial, row in
+            partial + SessionDayAttribution.portion(
+                on: start,
+                start: row.startDate,
+                end: row.endDate,
+                durationSeconds: row.durationSeconds,
+                totalSeeds: row.seeds,
+                calendar: cal
+            ).seconds
+        }
+        return secs / 60
     }
 
     private var accumulatingSeconds: Int {
@@ -240,16 +267,27 @@ private struct StoryActivityCard: View {
         return max(0, Int(now.timeIntervalSince(state.startedAt)))
     }
 
-    private var accumulatingSeeds: Int {
-        accumulatingSeconds * AppSettings.seedsPerSecond
+    private var accumulatingSlice: (seconds: Int, seeds: Int) {
+        guard let state = activeTrackingState else { return (0, 0) }
+        let cal = Calendar.current
+        let wall = accumulatingSeconds
+        let totalSeeds = SessionDayAttribution.seeds(forSeconds: wall)
+        return SessionDayAttribution.portion(
+            on: dayStart,
+            start: state.startedAt,
+            end: now,
+            durationSeconds: wall,
+            totalSeeds: totalSeeds,
+            calendar: cal
+        )
     }
 
     private var totalSeeds: Int {
-        completedSeeds + accumulatingSeeds
+        completedSeeds + (isActiveNow ? accumulatingSlice.seeds : 0)
     }
 
     private var totalMinutes: Int {
-        completedMinutes + (accumulatingSeconds / 60)
+        completedMinutes + (isActiveNow ? accumulatingSlice.seconds / 60 : 0)
     }
 
     private var seedsSubtitle: String {
@@ -289,6 +327,15 @@ private struct StoryActivityCard: View {
                     ForEach(sessions, id: \.id) { session in
                         let display = activityDisplay(for: session.activityTypeId)
                         let reaction = reactionsBySessionId[session.id] ?? (0, false)
+                        let cal = Calendar.current
+                        let daySlice = SessionDayAttribution.portion(
+                            on: dayStart,
+                            start: session.startDate,
+                            end: session.endDate,
+                            durationSeconds: session.durationSeconds,
+                            totalSeeds: session.seeds,
+                            calendar: cal
+                        )
                         HStack(spacing: 12) {
                             Image(systemName: display.symbolName)
                                 .font(AppFont.title3)
@@ -298,7 +345,7 @@ private struct StoryActivityCard: View {
                                 .font(AppFont.body)
                                 .foregroundStyle(.white)
                             Spacer()
-                            Text(L.formattedDuration(minutes: session.durationSeconds / 60, language: appLanguage))
+                            Text(L.formattedTimelineMinutes(daySlice.seconds, language: appLanguage))
                                 .font(AppFont.subheadline)
                                 .foregroundStyle(.white.opacity(0.7))
                             KarmaPartnersReactionChip(
@@ -322,7 +369,7 @@ private struct StoryActivityCard: View {
                                 .font(AppFont.body)
                                 .foregroundStyle(.white)
                             Spacer()
-                            Text(L.formattedDuration(minutes: accumulatingSeconds / 60, language: appLanguage))
+                            Text(L.formattedTimelineMinutes(accumulatingSlice.seconds, language: appLanguage))
                                 .font(AppFont.subheadline)
                                 .foregroundStyle(AppColors.rejoyOrange)
                         }

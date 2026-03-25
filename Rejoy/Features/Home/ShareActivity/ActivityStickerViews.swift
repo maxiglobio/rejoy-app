@@ -15,7 +15,7 @@ struct StickerData {
     static func from(session: Session, activity: ActivityType?, isRejoyed: Bool, language: String, avatarImage: UIImage?) -> StickerData {
         let name = activity.map { L.activityName($0.name, language: language) } ?? L.string("activity", language: language)
         let nameRaw = activity?.name ?? "Study"
-        let duration = L.formattedDuration(minutes: session.durationSeconds / 60, language: language)
+        let duration = L.formattedTimelineMinutes(session.durationSeconds, language: language)
         let seedsFormatted = formatSeeds(session.seeds, language: language)
         let seedsText = String(format: L.string("seeds_count_formatted", language: language), seedsFormatted)
         return StickerData(

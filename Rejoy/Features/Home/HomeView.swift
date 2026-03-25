@@ -46,18 +46,45 @@ struct HomeView: View {
     private var calendar: Calendar { Calendar.current }
     private var startOfSelectedDay: Date { calendar.startOfDay(for: selectedDate) }
 
-    private var selectedDaySessions: [Session] {
-        allSessions
-            .filter { calendar.isDate($0.startDate, inSameDayAs: startOfSelectedDay) }
-            .sorted { $0.startDate > $1.startDate }
+    private struct AttributedSessionDayRow: Identifiable {
+        let session: Session
+        let attributedSeconds: Int
+        let attributedSeeds: Int
+        var id: UUID { session.id }
+    }
+
+    private var attributedSessionsForSelectedDay: [AttributedSessionDayRow] {
+        allSessions.compactMap { session in
+            let p = SessionDayAttribution.sessionPortion(session, on: startOfSelectedDay, calendar: calendar)
+            guard p.seconds > 0 else { return nil }
+            return AttributedSessionDayRow(session: session, attributedSeconds: p.seconds, attributedSeeds: p.seeds)
+        }
+        .sorted { $0.session.startDate > $1.session.startDate }
+    }
+
+    private var ongoingPortionForSelectedDay: (seconds: Int, seeds: Int) {
+        guard let active = activeOngoingSession else { return (0, 0) }
+        let now = Date()
+        let secs = active.effectiveElapsedSeconds()
+        let totalSeeds = SessionDayAttribution.seeds(forSeconds: secs)
+        return SessionDayAttribution.portion(
+            on: startOfSelectedDay,
+            start: active.firstWallClockStart,
+            end: now,
+            durationSeconds: secs,
+            totalSeeds: totalSeeds,
+            calendar: calendar
+        )
     }
 
     private var selectedDaySeeds: Int {
-        selectedDaySessions.reduce(0) { $0 + $1.seeds }
+        let fromSessions = attributedSessionsForSelectedDay.reduce(0) { $0 + $1.attributedSeeds }
+        return fromSessions + ongoingPortionForSelectedDay.seeds
     }
 
     private var selectedDayMinutes: Int {
-        selectedDaySessions.reduce(0) { $0 + $1.durationSeconds } / 60
+        let fromSessions = attributedSessionsForSelectedDay.reduce(0) { $0 + $1.attributedSeconds } / 60
+        return fromSessions + ongoingPortionForSelectedDay.seconds / 60
     }
 
     private var selectedDayLabel: String {
@@ -156,14 +183,14 @@ struct HomeView: View {
         seedsJarCoordinator.resetSeeds(forTotalMinutes: selectedDayMinutes)
         let total = selectedDayMinutes
         guard total > 0 else { return }
-        for session in selectedDaySessions where rejoyedSessionIds.contains(session.id) {
-            let mins = session.durationSeconds / 60
+        for row in attributedSessionsForSelectedDay where rejoyedSessionIds.contains(row.session.id) {
+            let mins = row.attributedSeconds / 60
             seedsJarCoordinator.turnGreenProportional(sessionMinutes: mins, totalMinutes: total)
         }
     }
 
     private var allActivitiesRejoyed: Bool {
-        !selectedDaySessions.isEmpty && selectedDaySessions.allSatisfy { rejoyedSessionIds.contains($0.id) }
+        !attributedSessionsForSelectedDay.isEmpty && attributedSessionsForSelectedDay.allSatisfy { rejoyedSessionIds.contains($0.session.id) }
     }
 
     private var heroCardAccentColor: Color {
@@ -349,16 +376,13 @@ struct HomeView: View {
                 )
             }
             .alert(L.string("nudge_permission_prompt_title", language: appLanguage), isPresented: $showNudgePermissionPrompt) {
-                Button(L.string("enable", language: appLanguage)) {
+                Button(L.string("permissions_continue", language: appLanguage)) {
                     hasSeenNudgePermissionPrompt = true
                     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                         if granted {
                             PushRegistrationService.registerForRemoteNotifications()
                         }
                     }
-                }
-                Button(L.string("skip_for_now", language: appLanguage), role: .cancel) {
-                    hasSeenNudgePermissionPrompt = true
                 }
             } message: {
                 Text(L.string("nudge_permission_prompt_message", language: appLanguage))
@@ -527,7 +551,18 @@ struct HomeView: View {
                 for member in members {
                     group.addTask {
                         let sessions = try? await SupabaseService.shared.fetchSessions(userId: member.userId, date: dateForLoad)
-                        let seeds = sessions?.reduce(0) { $0 + $1.seeds } ?? 0
+                        let cal = Calendar.current
+                        let dayStart = cal.startOfDay(for: dateForLoad)
+                        let seeds = sessions?.reduce(0) { partial, row in
+                            partial + SessionDayAttribution.portion(
+                                on: dayStart,
+                                start: row.startDate,
+                                end: row.endDate,
+                                durationSeconds: row.durationSeconds,
+                                totalSeeds: row.seeds,
+                                calendar: cal
+                            ).seeds
+                        } ?? 0
                         return (member.userId, seeds)
                     }
                 }
@@ -747,7 +782,7 @@ extension HomeView {
         VStack(alignment: .leading, spacing: 12) {
             Text(timelineTitle)
                 .font(AppFont.headline)
-            if selectedDaySessions.isEmpty && activeOngoingSession == nil {
+            if attributedSessionsForSelectedDay.isEmpty && activeOngoingSession == nil {
                 TimelineEmptyStateView(
                     isToday: calendar.isDateInToday(selectedDate),
                     appLanguage: appLanguage
@@ -756,13 +791,16 @@ extension HomeView {
                 if let session = activeOngoingSession {
                     OngoingSessionRowView(session: session, onTap: { onExpandTracking?() })
                 }
-                ForEach(selectedDaySessions) { session in
+                ForEach(attributedSessionsForSelectedDay) { row in
+                    let session = row.session
                     let isFirstRejoyable = !hasSeenRejoyButtonHint
                         && canRejoyToday
                         && !rejoyedSessionIds.contains(session.id)
-                        && selectedDaySessions.first(where: { canRejoyToday && !rejoyedSessionIds.contains($0.id) })?.id == session.id
+                        && attributedSessionsForSelectedDay.first(where: { canRejoyToday && !rejoyedSessionIds.contains($0.session.id) })?.session.id == session.id
                     SessionRowView(
                         session: session,
+                        displayDurationSeconds: row.attributedSeconds,
+                        displaySeeds: row.attributedSeeds,
                         activityTypes: activityTypes,
                         isRejoyed: rejoyedSessionIds.contains(session.id),
                         canRejoy: canRejoyToday,
@@ -774,10 +812,10 @@ extension HomeView {
                             var ids = Set(rejoyedIdsRaw.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
                             ids.insert(session.id)
                             rejoyedIdsRaw = ids.map(\.uuidString).joined(separator: ",")
-                            seedsJarCoordinator.turnGreen(durationMinutes: session.durationSeconds / 60)
+                            seedsJarCoordinator.turnGreen(durationMinutes: max(1, (row.attributedSeconds + 59) / 60))
                             seedsJarCoordinator.triggerChaoticJump()
                             // Check if we should show achievement popup (all sessions rejoyed today, once per day)
-                            let allRejoyed = !selectedDaySessions.isEmpty && selectedDaySessions.allSatisfy { ids.contains($0.id) }
+                            let allRejoyed = !attributedSessionsForSelectedDay.isEmpty && attributedSessionsForSelectedDay.allSatisfy { ids.contains($0.session.id) }
                             if allRejoyed, calendar.isDateInToday(selectedDate), canRejoyToday, AchievementService.shouldShowAchievementToday() {
                                 let catalog = AchievementService.loadAchievements()
                                 if let achievement = AchievementService.randomAchievement(from: catalog) {
@@ -1113,6 +1151,21 @@ private struct OngoingSessionRowView: View {
     let onTap: () -> Void
     @Environment(\.appLanguage) private var appLanguage
 
+    private var todayPortion: (seconds: Int, seeds: Int) {
+        let cal = Calendar.current
+        let now = Date()
+        let secs = session.effectiveElapsedSeconds()
+        let totalSeeds = SessionDayAttribution.seeds(forSeconds: secs)
+        return SessionDayAttribution.portion(
+            on: cal.startOfDay(for: now),
+            start: session.firstWallClockStart,
+            end: now,
+            durationSeconds: secs,
+            totalSeeds: totalSeeds,
+            calendar: cal
+        )
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
@@ -1134,7 +1187,7 @@ private struct OngoingSessionRowView: View {
                             .background(AppColors.rejoyOrange.opacity(0.2))
                             .clipShape(Capsule())
                     }
-                    Text("\(session.formattedTime(session.displayedSeconds)) · \(String(format: L.string("seeds_count", language: appLanguage), session.seeds))")
+                    Text("\(session.formattedTime(todayPortion.seconds)) · \(String(format: L.string("seeds_count", language: appLanguage), todayPortion.seeds))")
                         .font(AppFont.subheadline)
                         .foregroundStyle(AppColors.dotsStatsText)
                 }
@@ -1215,6 +1268,9 @@ private struct RejoyAccumulatingExplanationSheet: View {
 
 struct SessionRowView: View {
     let session: Session
+    /// When set, timeline shows this day’s attributed slice (multi-day sessions).
+    var displayDurationSeconds: Int? = nil
+    var displaySeeds: Int? = nil
     let activityTypes: [ActivityType]
     let isRejoyed: Bool
     let canRejoy: Bool
@@ -1229,6 +1285,9 @@ struct SessionRowView: View {
     private var activity: ActivityType? {
         activityTypes.first { $0.id == session.activityTypeId }
     }
+
+    private var durationForDisplay: Int { displayDurationSeconds ?? session.durationSeconds }
+    private var seedsForDisplay: Int { displaySeeds ?? session.seeds }
 
     private var isAccumulating: Bool {
         !canRejoy && !isRejoyed
@@ -1248,7 +1307,7 @@ struct SessionRowView: View {
                         Text(activity.map { L.activityName($0.name, language: appLanguage) } ?? L.string("activity", language: appLanguage))
                             .font(AppFont.headline)
                             .foregroundStyle(.primary)
-                        Text("\(L.formattedDuration(minutes: session.durationSeconds / 60, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), session.seeds))")
+                        Text("\(L.formattedTimelineMinutes(durationForDisplay, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), seedsForDisplay))")
                             .font(AppFont.subheadline)
                             .foregroundStyle(AppColors.dotsStatsText)
                     }

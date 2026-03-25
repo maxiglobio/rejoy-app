@@ -1,11 +1,8 @@
 import SwiftUI
-import AVFoundation
-import Speech
 import UserNotifications
 
 struct PermissionsView: View {
     let onContinue: () -> Void
-    let onSkip: () -> Void
     @Environment(\.appLanguage) private var appLanguage
 
     var body: some View {
@@ -19,16 +16,6 @@ struct PermissionsView: View {
 
                 Section(L.string("permissions", language: appLanguage)) {
                     PermissionRow(
-                        title: L.string("microphone", language: appLanguage),
-                        message: L.string("record_voice", language: appLanguage),
-                        icon: "mic.fill"
-                    )
-                    PermissionRow(
-                        title: L.string("speech_recognition", language: appLanguage),
-                        message: L.string("transcribe_dedication", language: appLanguage),
-                        icon: "waveform"
-                    )
-                    PermissionRow(
                         title: L.string("notifications", language: appLanguage),
                         message: L.string("notifications_nudges_message", language: appLanguage),
                         icon: "bell.fill"
@@ -38,32 +25,27 @@ struct PermissionsView: View {
                 Section {
                     Button {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        requestPermissions()
-                        onContinue()
+                        requestNotificationPermissionThenContinue()
                     } label: {
-                        Text(L.string("enable", language: appLanguage))
+                        Text(L.string("permissions_continue", language: appLanguage))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(AppColors.rejoyOrange)
-
-                    Button(L.string("skip_for_now", language: appLanguage)) {
-                        onSkip()
-                    }
-                    .frame(maxWidth: .infinity)
                 }
             }
             .navigationTitle(L.string("permissions", language: appLanguage))
         }
     }
 
-    private func requestPermissions() {
-        AVAudioSession.sharedInstance().requestRecordPermission { _ in }
-        SFSpeechRecognizer.requestAuthorization { _ in }
+    private func requestNotificationPermissionThenContinue() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             if granted {
                 PushRegistrationService.registerForRemoteNotifications()
+            }
+            DispatchQueue.main.async {
+                onContinue()
             }
         }
     }

@@ -40,6 +40,10 @@ final class ProfileState: ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: displayNameKey) }
     }
 
+    static func clearDisplayName() {
+        UserDefaults.standard.removeObject(forKey: displayNameKey)
+    }
+
     /// Initials for placeholder (e.g. "JD" from "John Doe" or "J" from "john@email.com")
     static func initials() -> String {
         if let name = displayName, !name.isEmpty {

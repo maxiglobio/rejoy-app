@@ -67,6 +67,16 @@ final class SupabaseService: ObservableObject {
         teacherPortraitURL = nil
     }
 
+    /// Permanently deletes the authenticated user in Supabase (`auth.users` and cascaded rows). Requires RPC `delete_my_account` in the project SQL migrations.
+    func deleteAccount() async throws {
+        struct NoParams: Encodable {}
+        try await client.rpc("delete_my_account", params: NoParams()).execute()
+        isSignedIn = false
+        planType = .free
+        teacherPortraitURL = nil
+        try? await client.auth.signOut()
+    }
+
     // MARK: - Sessions
 
     func insertSession(_ session: Session) async throws {
@@ -94,7 +104,8 @@ final class SupabaseService: ObservableObject {
         guard let date = date else { return rows }
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        return rows.filter { calendar.isDate($0.startDate, inSameDayAs: startOfDay) }
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return rows }
+        return rows.filter { $0.startDate < endOfDay && $0.endDate > startOfDay }
     }
 
     func deleteSession(id: UUID) async throws {

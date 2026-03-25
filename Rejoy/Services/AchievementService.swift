@@ -43,6 +43,14 @@ enum AchievementService {
         UserDefaults.standard.set(formatter.string(from: Date()), forKey: lastShownDateKey)
     }
 
+    /// Clears device-local unlock history (e.g. after account deletion).
+    static func clearLocalUnlockStorage() {
+        UserDefaults.standard.removeObject(forKey: unlockedIdsKey)
+        UserDefaults.standard.removeObject(forKey: unlockCountsKey)
+        UserDefaults.standard.removeObject(forKey: unlockDatesKey)
+        UserDefaults.standard.removeObject(forKey: lastShownDateKey)
+    }
+
     private static func unlockCounts() -> [UUID: Int] {
         if let data = UserDefaults.standard.data(forKey: unlockCountsKey),
            let decoded = try? JSONDecoder().decode([String: Int].self, from: data) {
