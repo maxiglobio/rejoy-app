@@ -9,9 +9,9 @@ struct ActiveTrackingView: View {
 
     @Environment(\.appLanguage) private var appLanguage
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @State private var liveActivity: Activity<RejoyTrackingAttributes>?
     @State private var iconScale: CGFloat = 1.0
-    @State private var ambientPhase: CGFloat = 0
 
     var body: some View {
         Group {
@@ -28,18 +28,21 @@ struct ActiveTrackingView: View {
                 session.startTimer()
             }
             session.persistState()
-            session.onTick = { updateLiveActivity() }
+            session.onSignificantTimingChange = { syncLiveActivityState() }
             startLiveActivity()
         }
         .onDisappear {
-            session.stopTimer()
-            session.onTick = nil
+            session.onSignificantTimingChange = nil
         }
-        .onChange(of: session.elapsedSeconds) { _, _ in updateLiveActivity() }
-        .onChange(of: session.isPaused) { _, _ in updateLiveActivity() }
+        /// Per-second push refreshes `seedsSnapshot` in Live Activity state (SwiftUI `Text` only — UIKit is not supported there).
+        /// System `Text(timerInterval:)` advances time without this.
+        .onChange(of: session.elapsedSeconds) { _, _ in
+            syncLiveActivityState()
+        }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active, !session.isPaused {
                 session.elapsedSeconds = session.totalPausedSeconds + Int(Date().timeIntervalSince(session.startDate))
+                syncLiveActivityState()
             }
         }
         .task(id: session.isPaused) {
@@ -61,27 +64,6 @@ struct ActiveTrackingView: View {
                 guard !session.isPaused else { break }
             }
             iconScale = 1.0
-        }
-        .task(id: isCollapsed) {
-            guard isCollapsed else {
-                ambientPhase = 0
-                return
-            }
-            while true {
-                try? await Task.sleep(for: .seconds(0.5))
-                guard isCollapsed else { break }
-                withAnimation(.easeInOut(duration: 2.0)) {
-                    ambientPhase = 1
-                }
-                try? await Task.sleep(for: .seconds(2.0))
-                guard isCollapsed else { break }
-                withAnimation(.easeInOut(duration: 2.0)) {
-                    ambientPhase = 0
-                }
-                try? await Task.sleep(for: .seconds(0.5))
-                guard isCollapsed else { break }
-            }
-            ambientPhase = 0
         }
     }
 
@@ -180,31 +162,57 @@ struct ActiveTrackingView: View {
                         .foregroundStyle(AppColors.dotsSecondaryText)
                 }
                 .padding(16)
-                .background(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    AppColors.rejoyOrange.opacity(0.04 + 0.06 * ambientPhase),
-                                    AppColors.rejoyOrange.opacity((0.04 + 0.06 * ambientPhase) * 0.5),
-                                    Color.clear
-                                ],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 200
-                            )
-                        )
-                        .blur(radius: 24)
-                        .allowsHitTesting(false)
-                )
-                .overlay(RoundedRectangle(cornerRadius: 24).stroke(AppColors.dotsActiveRowBorder, lineWidth: 3))
-                .clipShape(RoundedRectangle(cornerRadius: 24))
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay {
+                    compactBarBorderStroke
+                }
+                .shadow(color: Color.black.opacity(0.22), radius: 16, x: 0, y: 6)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
             .padding(.bottom, 64)
         }
+    }
+
+    /// Collapsed bar border: slow rotating orange highlight while tracking; static when paused or Reduce Motion.
+    @ViewBuilder
+    private var compactBarBorderStroke: some View {
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+        if accessibilityReduceMotion || session.isPaused {
+            shape.strokeBorder(compactBarStaticBorderGradient, lineWidth: 1)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                let t = context.date.timeIntervalSinceReferenceDate
+                let r = (t * 56.0).truncatingRemainder(dividingBy: 360)
+                shape.strokeBorder(
+                    AngularGradient(
+                        gradient: Gradient(colors: [
+                            AppColors.rejoyOrange.opacity(0.1),
+                            AppColors.rejoyOrange.opacity(0.4),
+                            AppColors.rejoyOrange.opacity(0.95),
+                            AppColors.rejoyOrange.opacity(0.4),
+                            AppColors.rejoyOrange.opacity(0.1)
+                        ]),
+                        center: .center,
+                        startAngle: .degrees(r),
+                        endAngle: .degrees(r + 360)
+                    ),
+                    lineWidth: 1.25
+                )
+            }
+        }
+    }
+
+    private var compactBarStaticBorderGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.white.opacity(0.38),
+                Color.white.opacity(0.1),
+                AppColors.rejoyOrange.opacity(0.5)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private func stopAndDismiss() {
@@ -220,11 +228,7 @@ struct ActiveTrackingView: View {
             activityName: session.activity.name,
             symbolName: session.activity.symbolName
         )
-        let state = RejoyTrackingAttributes.ContentState(
-            elapsedSeconds: session.displayedSeconds,
-            seeds: session.seeds,
-            isPaused: session.isPaused
-        )
+        let state = liveActivityContentState()
         Task {
             for existing in Activity<RejoyTrackingAttributes>.activities {
                 await existing.end(nil, dismissalPolicy: .immediate)
@@ -240,17 +244,23 @@ struct ActiveTrackingView: View {
         }
     }
 
-    private func updateLiveActivity() {
-        let activity = liveActivity
-        let state = RejoyTrackingAttributes.ContentState(
-            elapsedSeconds: session.displayedSeconds,
-            seeds: session.seeds,
-            isPaused: session.isPaused
+    private func liveActivityContentState() -> RejoyTrackingAttributes.ContentState {
+        RejoyTrackingAttributes.ContentState(
+            accumulatedSeconds: session.totalPausedSeconds,
+            segmentStartDate: session.startDate,
+            isPaused: session.isPaused,
+            seedsPerSecond: AppSettings.seedsPerSecond,
+            seedsSnapshot: session.seeds
         )
+    }
+
+    private func syncLiveActivityState() {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let state = liveActivityContentState()
         Task {
-            await activity?.update(
-                ActivityContent(state: state, staleDate: nil)
-            )
+            for existing in Activity<RejoyTrackingAttributes>.activities {
+                try? await existing.update(ActivityContent(state: state, staleDate: nil))
+            }
         }
     }
 

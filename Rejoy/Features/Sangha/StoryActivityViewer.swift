@@ -97,6 +97,8 @@ struct StoryActivityViewer: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                // Fades scrolling card content under the header so it doesn’t visually collide with avatars.
+                KarmaPartnersHeaderBottomFade()
                 Spacer()
             }
         }
@@ -121,6 +123,27 @@ struct StoryActivityViewer: View {
                 onMemberViewed?(member.userId)
             }
         }
+    }
+}
+
+/// Soft gradient (and a touch of depth) below the avatar row so scrolled session content fades under the header instead of overlapping it.
+private struct KarmaPartnersHeaderBottomFade: View {
+    private let height: CGFloat = 48
+
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .black, location: 0),
+                .init(color: .black.opacity(0.88), location: 0.45),
+                .init(color: .black.opacity(0), location: 1)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: height)
+        .frame(maxWidth: .infinity)
+        .allowsHitTesting(false)
+        .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: 8)
     }
 }
 
@@ -213,10 +236,6 @@ private struct StoryActivityCard: View {
         return (L.string("activity", language: appLanguage), "circle")
     }
 
-    private var hasNoActivityToday: Bool {
-        Calendar.current.isDateInToday(date) && !isLoading && sessions.isEmpty && !isActiveNow
-    }
-
     private var memberDisplayName: String {
         if isCurrentUser, let name = ProfileState.displayName, !name.isEmpty {
             return name
@@ -229,6 +248,29 @@ private struct StoryActivityCard: View {
 
     private var dayStart: Date {
         Calendar.current.startOfDay(for: date)
+    }
+
+    /// Completed sessions that contribute non-zero attributed time on the selected calendar day.
+    private var sessionsWithNonZeroSliceToday: [SessionRow] {
+        let cal = Calendar.current
+        let start = dayStart
+        return sessions.filter { row in
+            SessionDayAttribution.portion(
+                on: start,
+                start: row.startDate,
+                end: row.endDate,
+                durationSeconds: row.durationSeconds,
+                totalSeeds: row.seeds,
+                calendar: cal
+            ).seconds > 0
+        }
+    }
+
+    private var hasNoActivityToday: Bool {
+        Calendar.current.isDateInToday(date)
+            && !isLoading
+            && sessionsWithNonZeroSliceToday.isEmpty
+            && !(isActiveNow && accumulatingSlice.seconds > 0)
     }
 
     private var completedSeeds: Int {
@@ -298,113 +340,118 @@ private struct StoryActivityCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(memberDisplayName)
-                .font(AppFont.title2)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-
-            if isActiveNow {
-                Text(L.string("active_now", language: appLanguage))
-                    .font(AppFont.subheadline)
-                    .foregroundStyle(AppColors.rejoyOrange)
-            }
-
-            if isLoading {
-                ActivityCardSkeleton()
-            } else {
-                Text("\(totalSeeds)")
-                    .font(AppFont.rounded(size: 40, weight: .semibold))
-                    .foregroundStyle(isActiveNow ? AppColors.rejoyOrange : .white)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-
-                Text(seedsSubtitle)
-                    .font(AppFont.subheadline)
-                    .foregroundStyle(.white.opacity(0.8))
-
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(sessions, id: \.id) { session in
-                        let display = activityDisplay(for: session.activityTypeId)
-                        let reaction = reactionsBySessionId[session.id] ?? (0, false)
-                        let cal = Calendar.current
-                        let daySlice = SessionDayAttribution.portion(
-                            on: dayStart,
-                            start: session.startDate,
-                            end: session.endDate,
-                            durationSeconds: session.durationSeconds,
-                            totalSeeds: session.seeds,
-                            calendar: cal
-                        )
-                        HStack(spacing: 12) {
-                            Image(systemName: display.symbolName)
-                                .font(AppFont.title3)
-                                .foregroundStyle(AppColors.rejoyOrange)
-                                .frame(width: 32)
-                            Text(L.activityName(display.name, language: appLanguage))
-                                .font(AppFont.body)
-                                .foregroundStyle(.white)
-                            Spacer()
-                            Text(L.formattedTimelineMinutes(daySlice.seconds, language: appLanguage))
-                                .font(AppFont.subheadline)
-                                .foregroundStyle(.white.opacity(0.7))
-                            KarmaPartnersReactionChip(
-                                count: reaction.count,
-                                hasReacted: reaction.hasReacted,
-                                canReact: SupabaseService.shared.currentUserId != nil && !reaction.hasReacted
-                            ) {
-                                reactToSession(session.id)
-                            }
-                        }
-                        .padding(.vertical, 6)
-                    }
-                    if isActiveNow, let state = activeTrackingState {
-                        let display = activityDisplay(for: state.activityTypeId)
-                        HStack(spacing: 12) {
-                            Image(systemName: display.symbolName)
-                                .font(AppFont.title3)
-                                .foregroundStyle(AppColors.rejoyOrange)
-                                .frame(width: 32)
-                            Text(L.activityName(display.name, language: appLanguage))
-                                .font(AppFont.body)
-                                .foregroundStyle(.white)
-                            Spacer()
-                            Text(L.formattedTimelineMinutes(accumulatingSlice.seconds, language: appLanguage))
-                                .font(AppFont.subheadline)
-                                .foregroundStyle(AppColors.rejoyOrange)
-                        }
-                        .padding(.vertical, 6)
-                    }
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-            }
-            Spacer()
-            if hasNoActivityToday && !isCurrentUser && SupabaseService.shared.currentUserId != nil {
-                Button {
-                    sendNudge()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "hand.raised.fill")
-                            .font(AppFont.title3)
-                        Text(L.string("push_to_activity_button", language: appLanguage))
-                            .font(AppFont.headline)
-                    }
-                    .foregroundStyle(.black)
+        ScrollView {
+            VStack(spacing: 16) {
+                Text(memberDisplayName)
+                    .font(AppFont.title2)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(AppColors.rejoyOrange)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                if isActiveNow {
+                    Text(L.string("active_now", language: appLanguage))
+                        .font(AppFont.subheadline)
+                        .foregroundStyle(AppColors.rejoyOrange)
                 }
-                .buttonStyle(.plain)
-                .disabled(isSendingNudge)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+
+                if isLoading {
+                    ActivityCardSkeleton()
+                } else {
+                    Text("\(totalSeeds)")
+                        .font(AppFont.rounded(size: 40, weight: .semibold))
+                        .foregroundStyle(isActiveNow ? AppColors.rejoyOrange : .white)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+
+                    Text(seedsSubtitle)
+                        .font(AppFont.subheadline)
+                        .foregroundStyle(.white.opacity(0.8))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(sessionsWithNonZeroSliceToday, id: \.id) { session in
+                            let display = activityDisplay(for: session.activityTypeId)
+                            let reaction = reactionsBySessionId[session.id] ?? (0, false)
+                            let cal = Calendar.current
+                            let daySlice = SessionDayAttribution.portion(
+                                on: dayStart,
+                                start: session.startDate,
+                                end: session.endDate,
+                                durationSeconds: session.durationSeconds,
+                                totalSeeds: session.seeds,
+                                calendar: cal
+                            )
+                            HStack(spacing: 12) {
+                                Image(systemName: display.symbolName)
+                                    .font(AppFont.title3)
+                                    .foregroundStyle(AppColors.rejoyOrange)
+                                    .frame(width: 32)
+                                Text(L.activityName(display.name, language: appLanguage))
+                                    .font(AppFont.body)
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Text(L.formattedTimelineMinutes(daySlice.seconds, language: appLanguage))
+                                    .font(AppFont.subheadline)
+                                    .foregroundStyle(.white.opacity(0.7))
+                                KarmaPartnersReactionChip(
+                                    count: reaction.count,
+                                    hasReacted: reaction.hasReacted,
+                                    canReact: SupabaseService.shared.currentUserId != nil && !reaction.hasReacted
+                                ) {
+                                    reactToSession(session.id)
+                                }
+                            }
+                            .padding(.vertical, 6)
+                        }
+                        if isActiveNow, let state = activeTrackingState, accumulatingSlice.seconds > 0 {
+                            let display = activityDisplay(for: state.activityTypeId)
+                            HStack(spacing: 12) {
+                                Image(systemName: display.symbolName)
+                                    .font(AppFont.title3)
+                                    .foregroundStyle(AppColors.rejoyOrange)
+                                    .frame(width: 32)
+                                Text(L.activityName(display.name, language: appLanguage))
+                                    .font(AppFont.body)
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Text(L.formattedTimelineMinutes(accumulatingSlice.seconds, language: appLanguage))
+                                    .font(AppFont.subheadline)
+                                    .foregroundStyle(AppColors.rejoyOrange)
+                            }
+                            .padding(.vertical, 6)
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+
+                if hasNoActivityToday && !isCurrentUser && SupabaseService.shared.currentUserId != nil {
+                    Button {
+                        sendNudge()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "hand.raised.fill")
+                                .font(AppFont.title3)
+                            Text(L.string("push_to_activity_button", language: appLanguage))
+                                .font(AppFont.headline)
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(AppColors.rejoyOrange)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isSendingNudge)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 150)
+            .padding(.bottom, 28)
         }
-        .padding(.top, 150)
+        .scrollIndicators(.visible)
         .overlay {
             if showNudgeSent {
                 Text(L.string("nudge_sent", language: appLanguage))
@@ -416,7 +463,7 @@ private struct StoryActivityCard: View {
                     .clipShape(Capsule())
             }
         }
-        .task(id: member.userId) {
+        .task(id: "\(member.userId.uuidString)-\(Calendar.current.startOfDay(for: date).timeIntervalSince1970)") {
             isLoading = true
             await loadData()
         }

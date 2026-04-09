@@ -4,4 +4,6 @@ import Foundation
 enum LegalDocumentLinks {
     static let terms = URL(string: "https://rejoy-marketing.vercel.app/terms.html")!
     static let privacy = URL(string: "https://rejoy-marketing.vercel.app/privacy.html")!
+    /// App Store product page (share sheet, invitations).
+    static let appStore = URL(string: "https://apps.apple.com/us/app/rejoy/id6759908549")!
 }

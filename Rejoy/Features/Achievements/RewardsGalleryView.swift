@@ -143,8 +143,17 @@ struct RewardsGalleryView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
             }
-            .navigationTitle(L.string("rewards_explainer_title", language: appLanguage))
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("")
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(L.string("rewards_explainer_title", language: appLanguage))
+                        .font(AppFont.headline)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.88)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L.string("done", language: appLanguage)) {
                         showExplainer = false

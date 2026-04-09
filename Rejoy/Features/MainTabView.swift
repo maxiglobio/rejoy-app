@@ -22,13 +22,17 @@ struct MainTabView: View {
     @State private var showUnfinishedRejoyReminder = false
     @State private var pendingRejoyReminderDate: Date? = nil
     @State private var showActivityPicker = false
+    @State private var activityPickerDetent: PresentationDetent = .medium
     @State private var showTracking: ActivityType?
     @State private var activeSession: ActiveTrackingSession?
     @State private var restoredTrackingState: ActiveTrackingPersistence.PersistedSession?
     @State private var isTrackingCollapsed = false
     @State private var showAdjustAndDedication: PendingSession?
     @State private var showDedication: PendingSession?
+    /// Home timeline scroll + highlight after saving from dedication.
+    @State private var timelineSpotlightSessionId: UUID?
     @State private var isKeyboardVisible = false
+    @ObservedObject private var altarFocus = AltarFocusController.shared
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -39,6 +43,7 @@ struct MainTabView: View {
                 onExpandTracking: { isTrackingCollapsed = false },
                 pendingRejoyReminderDate: $pendingRejoyReminderDate,
                 dateToOpenOnHome: $dateToOpenOnHome,
+                timelineSpotlightSessionId: $timelineSpotlightSessionId,
                 selectedTab: selectedTab
             )
             .tag(0)
@@ -69,9 +74,8 @@ struct MainTabView: View {
                 Label(L.string("profile", language: appLanguage), systemImage: "person.fill")
             }
         }
-        .toolbarBackground(.visible, for: .tabBar)
         .overlay(alignment: .bottom) {
-            if !isKeyboardVisible {
+            if !isKeyboardVisible && !altarFocus.isAltarFocused {
                 StartActivityButtonOverlay(onTap: {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         if activeSession != nil {
@@ -85,6 +89,9 @@ struct MainTabView: View {
             }
         }
         .onChange(of: selectedTab) { _, newValue in
+            if newValue != 2 {
+                AltarFocusController.shared.setAltarFocused(false)
+            }
             if newValue == 1 {
                 showActivityPicker = true
                 selectedTab = 0
@@ -103,6 +110,11 @@ struct MainTabView: View {
                     try? await SanghaService.shared.setActiveTracking(activityTypeId: activity.id, startedAt: Date())
                 }
             }
+            .presentationDetents([.medium, .large], selection: $activityPickerDetent)
+            .presentationDragIndicator(.visible)
+        }
+        .onChange(of: showActivityPicker) { _, isPresented in
+            if isPresented { activityPickerDetent = .medium }
         }
         .overlay {
             if let session = activeSession {
@@ -126,6 +138,10 @@ struct MainTabView: View {
                 })
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(isTrackingCollapsed ? Color.clear : AppColors.background)
+                .opacity(altarFocus.isAltarFocused ? 0 : 1)
+                .offset(y: altarFocus.isAltarFocused ? 80 : 0)
+                .allowsHitTesting(!altarFocus.isAltarFocused)
+                .animation(.easeInOut(duration: 0.28), value: altarFocus.isAltarFocused)
             }
         }
         .task {
@@ -173,7 +189,8 @@ struct MainTabView: View {
             }
         }
         .fullScreenCover(item: $showDedication) { pending in
-            DedicationView(activity: pending.activity, durationSeconds: pending.durationSeconds, wallClockStart: pending.wallClockStart, seedsJarCoordinator: seedsJarCoordinator, defaultDedicationText: L.string("dedication_default", language: appLanguage)) {
+            DedicationView(activity: pending.activity, durationSeconds: pending.durationSeconds, wallClockStart: pending.wallClockStart, seedsJarCoordinator: seedsJarCoordinator, defaultDedicationText: L.string("dedication_default", language: appLanguage)) { savedSessionId in
+                timelineSpotlightSessionId = savedSessionId
                 showDedication = nil
             }
         }
@@ -222,25 +239,39 @@ struct MainTabView: View {
 }
 
 private struct StartActivityButtonOverlay: View {
+    @Environment(\.appLanguage) private var appLanguage
     var onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            ZStack {
-                Circle()
-                    .fill(AppColors.rejoyOrange)
-                    .frame(width: 74, height: 74)
-                    .overlay {
-                        Circle()
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    }
-                    .overlay {
-                        Image(systemName: "record.circle")
-                            .font(AppFont.rounded(size: 38))
-                            .foregroundStyle(.white)
-                    }
-            }
+            Color.clear
+                .frame(width: 74, height: 74)
+                .contentShape(Circle())
         }
+        .buttonStyle(RecFABButtonStyle())
+        .accessibilityLabel(L.string("start_activity", language: appLanguage))
         .offset(y: 12)
+    }
+}
+
+/// Full-opacity press feedback: darker solid orange (no default opacity dimming — tab bar “+” slot would show through).
+private struct RecFABButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        ZStack {
+            Circle()
+                .fill(configuration.isPressed ? AppColors.rejoyOrangePressed : AppColors.rejoyOrange)
+                .frame(width: 74, height: 74)
+                .overlay {
+                    Circle()
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                }
+                .overlay {
+                    Image(systemName: "record.circle")
+                        .font(AppFont.rounded(size: 38))
+                        .foregroundStyle(.white)
+                }
+        }
+        .opacity(1)
+        .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }

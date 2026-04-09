@@ -56,21 +56,23 @@ struct ProfileCalendarView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
+        GeometryReader { geo in
+            let sidePadding: CGFloat = 16
+            // One month column width = visible area minus horizontal padding (avoids clipping on narrow devices).
+            let monthColumnWidth = max(260, geo.size.width - 2 * sidePadding)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 20) {
                     ForEach(displayedMonths, id: \.self) { monthStart in
                         MonthCalendarGrid(
                             monthStart: monthStart,
                             todayStart: todayStart,
-                            allSessions: allSessions,
-                            rejoyedSessionIds: rejoyedSessionIds,
                             calendar: calendar,
                             locale: displayLocale,
-                            dotSize: dotSize,
-                            horizontalSpacing: horizontalSpacing,
+                            containerWidth: monthColumnWidth,
+                            baseDotSize: dotSize,
+                            baseHorizontalSpacing: horizontalSpacing,
                             verticalSpacing: verticalSpacing,
-                            dotCornerRadius: dotCornerRadius,
+                            baseDotCornerRadius: dotCornerRadius,
                             greenColor: Self.greenColor,
                             orangeColor: Self.orangeColor,
                             grayColor: Self.grayColor,
@@ -78,13 +80,15 @@ struct ProfileCalendarView: View {
                             stateForDate: state(for:),
                             onDayTapped: onDayTapped
                         )
+                        .frame(width: monthColumnWidth)
                         .id(monthStart)
                     }
                 }
                 .scrollTargetLayout()
-                .padding(.horizontal, 16)
+                .padding(.horizontal, sidePadding)
             }
-            .scrollPosition(id: $scrollPosition, anchor: .center)
+            // Leading anchor matches viewAligned snap; center often adds a second correction pass and feels sluggish.
+            .scrollPosition(id: $scrollPosition, anchor: .leading)
             .scrollTargetBehavior(.viewAligned)
             .onAppear {
                 if let current = currentMonthStart {
@@ -93,14 +97,13 @@ struct ProfileCalendarView: View {
                 }
             }
             .onChange(of: scrollPosition) { _, newMonth in
-                if let m = newMonth {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        visibleMonthStart = m
-                    }
-                    if lastHapticMonth != m {
-                        lastHapticMonth = m
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    }
+                guard let m = newMonth else { return }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    visibleMonthStart = m
+                }
+                if lastHapticMonth != m {
+                    lastHapticMonth = m
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
             .onChange(of: scrollToCurrentTrigger) { _, triggered in
@@ -135,20 +138,34 @@ struct ProfileCalendarView: View {
 private struct MonthCalendarGrid: View {
     let monthStart: Date
     let todayStart: Date
-    let allSessions: [Session]
-    let rejoyedSessionIds: Set<UUID>
     let calendar: Calendar
     let locale: Locale
-    let dotSize: CGFloat
-    let horizontalSpacing: CGFloat
+    /// Width available for the 7-column grid (from `GeometryReader`); scales dots and spacing so nothing clips.
+    let containerWidth: CGFloat
+    let baseDotSize: CGFloat
+    let baseHorizontalSpacing: CGFloat
     let verticalSpacing: CGFloat
-    let dotCornerRadius: CGFloat
+    let baseDotCornerRadius: CGFloat
     let greenColor: Color
     let orangeColor: Color
     let grayColor: Color
     let dayLabelColor: Color
     let stateForDate: (Date) -> DayActivityState
     let onDayTapped: ((Date) -> Void)?
+
+    /// Base label column width at scale 1.0 (matches original fixed layout).
+    private static let baseLabelCellWidth: CGFloat = 26
+
+    private var monthLayout: (cellWidth: CGFloat, horizontalSpacing: CGFloat, dotSize: CGFloat, dotCornerRadius: CGFloat, gridWidth: CGFloat) {
+        let baseTotal = 7 * Self.baseLabelCellWidth + 6 * baseHorizontalSpacing
+        let scale = min(1, containerWidth / max(baseTotal, 1))
+        let cellWidth = Self.baseLabelCellWidth * scale
+        let hSpacing = baseHorizontalSpacing * scale
+        let dSize = baseDotSize * scale
+        let dRadius = baseDotCornerRadius * scale
+        let gridWidth = 7 * cellWidth + 6 * hSpacing
+        return (cellWidth, hSpacing, dSize, dRadius, gridWidth)
+    }
 
     /// Weekday symbols Mon–Sun for display (localized: en, ru, uk).
     private var weekdaySymbols: [String] {
@@ -188,36 +205,36 @@ private struct MonthCalendarGrid: View {
     }
 
     var body: some View {
+        let layout = monthLayout
         VStack(alignment: .leading, spacing: verticalSpacing) {
-            HStack(spacing: horizontalSpacing) {
+            HStack(spacing: layout.horizontalSpacing) {
                 ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
                     Text(symbol)
                         .font(AppFont.rounded(size: 11, weight: .semibold))
                         .foregroundStyle(dayLabelColor)
-                        .frame(width: 26, height: dotSize)
+                        .frame(width: layout.cellWidth, height: layout.dotSize)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
             }
 
-            let labelCellWidth: CGFloat = 26
             let rows = stride(from: 0, to: cellDates.count, by: 7).map { Array(cellDates[$0..<min($0 + 7, cellDates.count)]) }
 
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                HStack(spacing: horizontalSpacing) {
+                HStack(spacing: layout.horizontalSpacing) {
                     ForEach(Array(row.enumerated()), id: \.offset) { _, dateOpt in
                         let dotView = DayDotView(
                             state: dateOpt.map { stateForDate($0) } ?? .empty,
                             isEmpty: dateOpt == nil,
                             isToday: dateOpt.map { calendar.isDate($0, inSameDayAs: todayStart) } ?? false,
                             isFuture: dateOpt.map { calendar.startOfDay(for: $0) > todayStart } ?? false,
-                            size: dotSize,
-                            cornerRadius: dotCornerRadius,
+                            size: layout.dotSize,
+                            cornerRadius: layout.dotCornerRadius,
                             greenColor: greenColor,
                             orangeColor: orangeColor,
                             grayColor: grayColor
                         )
-                        .frame(width: labelCellWidth)
+                        .frame(width: layout.cellWidth)
 
                         if let date = dateOpt, let onTap = onDayTapped {
                             Button {
@@ -234,7 +251,7 @@ private struct MonthCalendarGrid: View {
                 }
             }
         }
-        .frame(width: 7 * 26 + 6 * horizontalSpacing)
+        .frame(width: layout.gridWidth)
     }
 }
 

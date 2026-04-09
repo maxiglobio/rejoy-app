@@ -46,6 +46,20 @@ final class SanghaService: ObservableObject {
         return sangha
     }
 
+    /// Renames a Sangha (creator only; enforced by RLS).
+    func updateSanghaName(sanghaId: UUID, name: String) async throws -> SanghaRow {
+        guard currentUserId != nil else { throw SanghaError.notSignedIn }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw SanghaError.emptyGroupName }
+        try await client
+            .from("sanghas")
+            .update(["name": trimmed])
+            .eq("id", value: sanghaId.uuidString.lowercased())
+            .execute()
+        guard let updated = try await fetchSangha(id: sanghaId) else { throw SanghaError.sanghaNotFound }
+        return updated
+    }
+
     /// Joins a Sangha by invite code. Uses RPC for security.
     func joinSangha(inviteCode: String) async throws -> SanghaRow {
         guard currentUserId != nil else { throw SanghaError.notSignedIn }
@@ -330,12 +344,14 @@ enum SanghaError: LocalizedError {
     case notSignedIn
     case invalidInviteCode
     case sanghaNotFound
+    case emptyGroupName
 
     var errorDescription: String? {
         switch self {
         case .notSignedIn: return "You must be signed in"
         case .invalidInviteCode: return "Invalid invite code"
         case .sanghaNotFound: return "Group not found"
+        case .emptyGroupName: return "Group name cannot be empty"
         }
     }
 }

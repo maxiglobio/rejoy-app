@@ -21,15 +21,21 @@ struct CachedAvatarImage: View {
                 .scaledToFill()
                 .frame(width: size, height: size)
                 .clipShape(Circle())
+                .transition(.opacity)
         } else {
             placeholder()
+                .transition(.opacity)
                 .task { await loadImage() }
         }
     }
 
     private func loadImage() async {
         if let cached = AvatarImageCache.image(for: url) {
-            await MainActor.run { loadedImage = cached }
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.22)) {
+                    loadedImage = cached
+                }
+            }
             return
         }
         let urlsToTry: [URL] = {
@@ -44,7 +50,11 @@ struct CachedAvatarImage: View {
                     let img = full.size.width > targetPx || full.size.height > targetPx
                         ? resize(full, to: targetPx) : full
                     AvatarImageCache.set(img, for: url)
-                    await MainActor.run { loadedImage = img }
+                    await MainActor.run {
+                        withAnimation(.easeOut(duration: 0.22)) {
+                            loadedImage = img
+                        }
+                    }
                     return
                 }
             } catch { }

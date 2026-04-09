@@ -205,6 +205,15 @@ struct ProfileVisibilityView: View {
                         showLeaveGroupAlert = true
                     }
                 },
+                onRenamed: { updated in
+                    if let idx = mySanghas.firstIndex(where: { $0.id == updated.id }) {
+                        mySanghas[idx] = updated
+                    }
+                    if selectedSanghaForOptions?.id == updated.id {
+                        selectedSanghaForOptions = updated
+                    }
+                    NotificationCenter.default.post(name: .profileVisibilityDidChange, object: nil)
+                },
                 onDismiss: { selectedSanghaForOptions = nil }
             )
         }
@@ -332,9 +341,17 @@ private struct GroupOptionsSheet: View {
     @AppStorage("appLanguage") private var appLanguageStorage = ""
     let onPauseVisibility: () -> Void
     let onLeaveGroup: () -> Void
+    let onRenamed: (SanghaRow) -> Void
     let onDismiss: () -> Void
 
+    @State private var showEditName = false
+
     private let accentOrange = AppColors.rejoyOrange
+
+    private var isCreator: Bool {
+        guard let uid = SupabaseService.shared.currentUserId else { return false }
+        return sangha.createdBy == uid
+    }
 
     private var inviteMessage: String {
         String(format: L.string("invite_message", language: appLanguageStorage), sangha.inviteCode)
@@ -343,6 +360,23 @@ private struct GroupOptionsSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if isCreator {
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        showEditName = true
+                    } label: {
+                        HStack(spacing: 16) {
+                            Image(systemName: "pencil")
+                                .font(AppFont.rounded(size: 20, weight: .medium))
+                                .foregroundStyle(accentOrange)
+                                .frame(width: 28)
+                            Text(L.string("edit_group_name", language: appLanguageStorage))
+                                .font(AppFont.rounded(size: 18, weight: .regular))
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
                 ShareLink(
                     item: inviteMessage,
                     subject: Text("\(L.string("sangha", language: appLanguageStorage)): \(sangha.name)")
@@ -399,8 +433,13 @@ private struct GroupOptionsSheet: View {
                     }
                 }
             }
+            .sheet(isPresented: $showEditName) {
+                EditSanghaNameSheet(sangha: sangha) { updated in
+                    onRenamed(updated)
+                }
+            }
         }
-        .presentationDetents([.height(280)])
+        .presentationDetents([.height(isCreator ? 340 : 280)])
     }
 }
 

@@ -16,12 +16,17 @@ struct HomeView: View {
     var onExpandTracking: (() -> Void)? = nil
     @Binding var pendingRejoyReminderDate: Date?
     @Binding var dateToOpenOnHome: Date?
+    /// When set after saving a session (e.g. dedication flow), home animates the new row and hero totals.
+    @Binding var timelineSpotlightSessionId: UUID?
     var selectedTab: Int = 0
-    @State private var previousSeeds: Int = 0
+    @State private var heroSeedsDisplay: Int = 0
+    @State private var heroMinutesDisplay: Int = 0
     @State private var selectedDate: Date = Date()
     @State private var timeForRejoyCheck: Date = Date()
     @State private var showDayPicker = false
     @State private var showRejoyMeditationSetup = false
+    @State private var showMeditationTimeInfoSheet = false
+    @State private var showRejoyMeditationLearnSheet = false
     @State private var isSanghaLoading = false
     @State private var lastSanghaLoadTime: Date?
     @State private var lastSanghaLoadDate: Date?
@@ -37,6 +42,7 @@ struct HomeView: View {
     @State private var unreadNudges: [ActivityNudgeRow] = []
     @State private var nudgeSenderProfiles: [UUID: ProfileRow] = [:]
     @State private var showNudgePermissionPrompt = false
+    @State private var timelineRowSpotlightId: UUID?
     @AppStorage("rejoyedSessionIds") private var rejoyedIdsRaw = ""
     @AppStorage("hasSeenNudgePermissionPrompt") private var hasSeenNudgePermissionPrompt = false
     @AppStorage("rejoyMeditationTime") private var rejoyMeditationTimeRaw = ""
@@ -59,7 +65,12 @@ struct HomeView: View {
             guard p.seconds > 0 else { return nil }
             return AttributedSessionDayRow(session: session, attributedSeconds: p.seconds, attributedSeeds: p.seeds)
         }
-        .sorted { $0.session.startDate > $1.session.startDate }
+        .sorted {
+            if $0.session.endDate != $1.session.endDate {
+                return $0.session.endDate > $1.session.endDate
+            }
+            return $0.session.createdAt > $1.session.createdAt
+        }
     }
 
     private var ongoingPortionForSelectedDay: (seconds: Int, seeds: Int) {
@@ -249,6 +260,44 @@ struct HomeView: View {
         return session
     }
 
+    private func consumeTimelineSpotlight(_ id: UUID?) {
+        guard let id = id else { return }
+        timelineSpotlightSessionId = nil
+        guard let session = allSessions.first(where: { $0.id == id }) else { return }
+
+        selectedDate = calendar.startOfDay(for: session.endDate)
+
+        let dayStart = startOfSelectedDay
+        let portion = SessionDayAttribution.sessionPortion(session, on: dayStart, calendar: calendar)
+        let newTotalSeeds = selectedDaySeeds
+        let newTotalMinutes = selectedDayMinutes
+        let prevSeeds = max(0, newTotalSeeds - portion.seeds)
+        let prevMinutes = max(0, newTotalMinutes - portion.seconds / 60)
+
+        var txn = Transaction()
+        txn.disablesAnimations = true
+        withTransaction(txn) {
+            heroSeedsDisplay = prevSeeds
+            heroMinutesDisplay = prevMinutes
+        }
+
+        timelineRowSpotlightId = id
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        let anim = Animation.spring(response: 0.55, dampingFraction: 0.86)
+        withAnimation(anim) {
+            heroSeedsDisplay = newTotalSeeds
+            heroMinutesDisplay = newTotalMinutes
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.35))
+            withAnimation(.easeOut(duration: 0.35)) {
+                timelineRowSpotlightId = nil
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
@@ -280,6 +329,9 @@ struct HomeView: View {
                 }
                 .padding()
                 .padding(.bottom, 90)
+            }
+            .onChange(of: timelineSpotlightSessionId) { _, newValue in
+                consumeTimelineSpotlight(newValue)
             }
             .refreshable {
                 await MainActor.run { isSanghaLoading = true }
@@ -318,6 +370,28 @@ struct HomeView: View {
             .sheet(isPresented: $showRejoyMeditationSetup) {
                 RejoyMeditationSetupSheet(onDismiss: { showRejoyMeditationSetup = false })
             }
+            .sheet(isPresented: $showMeditationTimeInfoSheet) {
+                MeditationTimeSetInfoSheet(
+                    timeFormatted: meditationTimeFormatted ?? "",
+                    onEdit: {
+                        showMeditationTimeInfoSheet = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                            showRejoyMeditationSetup = true
+                        }
+                    },
+                    onLearn: {
+                        showMeditationTimeInfoSheet = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                            showRejoyMeditationLearnSheet = true
+                        }
+                    }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showRejoyMeditationLearnSheet) {
+                RejoyMeditationCarouselSheet()
+            }
             .sheet(item: $pendingAchievement) { achievement in
                 AchievementPopupView(achievement: achievement) {
                     AchievementService.markAchievementShownToday()
@@ -329,7 +403,8 @@ struct HomeView: View {
             }
             .onAppear {
                 timeForRejoyCheck = Date()
-                previousSeeds = selectedDaySeeds
+                heroSeedsDisplay = selectedDaySeeds
+                heroMinutesDisplay = selectedDayMinutes
                 resetSeedsAndRestoreRejoyed()
                 updateWidgetData()
                 if let date = pendingRejoyReminderDate {
@@ -401,16 +476,23 @@ struct HomeView: View {
             }
             .onChange(of: selectedDate) { _, _ in
                 resetSeedsAndRestoreRejoyed()
-                previousSeeds = selectedDaySeeds
+                heroSeedsDisplay = selectedDaySeeds
+                heroMinutesDisplay = selectedDayMinutes
                 updateWidgetData()
             }
             .onChange(of: selectedDayMinutes) { _, _ in
-                guard calendar.isDateInToday(selectedDate) else { return }
-                resetSeedsAndRestoreRejoyed()
+                if calendar.isDateInToday(selectedDate) {
+                    resetSeedsAndRestoreRejoyed()
+                }
+                if timelineRowSpotlightId == nil, timelineSpotlightSessionId == nil {
+                    heroMinutesDisplay = selectedDayMinutes
+                }
             }
             .onChange(of: selectedDaySeeds) { _, newValue in
+                if timelineRowSpotlightId == nil, timelineSpotlightSessionId == nil {
+                    heroSeedsDisplay = newValue
+                }
                 guard calendar.isDateInToday(selectedDate) else { return }
-                previousSeeds = newValue
                 updateWidgetData()
             }
             .onReceive(NotificationCenter.default.publisher(for: .profileVisibilityDidChange)) { _ in
@@ -650,16 +732,18 @@ struct HomeView: View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(selectedDaySeeds)")
+                    Text(heroSeedsDisplay, format: .number.grouping(.automatic))
                         .font(AppFont.rounded(size: 48, weight: .bold))
+                        .contentTransition(.numericText())
                     HStack {
                         Text(L.string("seeds_planted", language: appLanguage))
                             .font(AppFont.title3)
                             .foregroundStyle(AppColors.dotsSecondaryText)
                         Spacer()
-                        Text("\(L.string("total", language: appLanguage)) \(L.formattedDuration(minutes: selectedDayMinutes, language: appLanguage))")
+                        Text("\(L.string("total", language: appLanguage)) \(L.formattedDuration(minutes: heroMinutesDisplay, language: appLanguage))")
                             .font(AppFont.title3)
                             .foregroundStyle(AppColors.dotsSecondaryText)
+                            .contentTransition(.interpolate)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -672,19 +756,25 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if calendar.isDateInToday(selectedDate), let timeStr = meditationTimeFormatted {
-                HStack(spacing: 3) {
-                    Image(systemName: "figure.mind.and.body")
-                        .font(AppFont.caption)
-                        .foregroundStyle(AppColors.dotsSecondaryText)
-                    Text(timeStr)
-                        .font(AppFont.caption)
-                        .foregroundStyle(AppColors.dotsStatsText)
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showMeditationTimeInfoSheet = true
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "figure.mind.and.body")
+                            .font(AppFont.caption)
+                            .foregroundStyle(AppColors.dotsSecondaryText)
+                        Text(timeStr)
+                            .font(AppFont.caption)
+                            .foregroundStyle(AppColors.dotsStatsText)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(AppColors.dotsRejoyDisabledBg)
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(AppColors.dotsBorder, lineWidth: 1))
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 4)
-                .background(AppColors.dotsRejoyDisabledBg)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(AppColors.dotsBorder, lineWidth: 1))
+                .buttonStyle(.plain)
                 .padding(.top, 12)
                 .padding(.trailing, 0)
             }
@@ -808,6 +898,7 @@ extension HomeView {
                         rejoyUnlockInText: rejoyUnlockInText,
                         showRejoyHint: isFirstRejoyable,
                         onRejoyHintDismiss: { hasSeenRejoyButtonHint = true },
+                        isSpotlight: timelineRowSpotlightId == session.id,
                         onRejoy: {
                             var ids = Set(rejoyedIdsRaw.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
                             ids.insert(session.id)
@@ -824,7 +915,53 @@ extension HomeView {
                             }
                         }
                     )
+                    .id(session.id)
+                    .modifier(TimelineNewRowEntranceModifier(rowSessionId: session.id, spotlightId: $timelineRowSpotlightId))
                 }
+            }
+        }
+    }
+}
+
+/// Slides the new session row in from the leading edge when it becomes the timeline spotlight (dedication save).
+private struct TimelineNewRowEntranceModifier: ViewModifier {
+    let rowSessionId: UUID
+    @Binding var spotlightId: UUID?
+    @State private var entranceOffset: CGFloat = 0
+    @State private var entranceOpacity: Double = 1
+    @State private var didAnimateEntranceForId: UUID?
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: entranceOffset)
+            .opacity(entranceOpacity)
+            .onChange(of: spotlightId) { _, newId in
+                if newId == nil {
+                    didAnimateEntranceForId = nil
+                    return
+                }
+                guard newId == rowSessionId else {
+                    entranceOffset = 0
+                    entranceOpacity = 1
+                    return
+                }
+                runEntrance(for: newId)
+            }
+            .onAppear {
+                runEntrance(for: spotlightId)
+            }
+    }
+
+    private func runEntrance(for id: UUID?) {
+        guard let id, id == rowSessionId else { return }
+        guard didAnimateEntranceForId != id else { return }
+        didAnimateEntranceForId = id
+        entranceOffset = -44
+        entranceOpacity = 0.92
+        DispatchQueue.main.async {
+            withAnimation(.spring(response: 0.58, dampingFraction: 0.88)) {
+                entranceOffset = 0
+                entranceOpacity = 1
             }
         }
     }
@@ -1048,6 +1185,78 @@ private struct LiquidGlassTooltipShape: Shape {
     }
 }
 
+private struct MeditationTimeSetInfoSheet: View {
+    let timeFormatted: String
+    let onEdit: () -> Void
+    let onLearn: () -> Void
+
+    @Environment(\.appLanguage) private var appLanguage
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    Image(systemName: "figure.mind.and.body")
+                        .font(AppFont.rounded(size: 56))
+                        .foregroundStyle(AppColors.rejoyOrange)
+
+                    Text(String(format: L.string("meditation_time_set_sheet_title", language: appLanguage), timeFormatted))
+                        .font(AppFont.title3)
+                        .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.primary)
+
+                    Text(L.string("meditation_time_set_sheet_body", language: appLanguage))
+                        .font(AppFont.body)
+                        .foregroundStyle(AppColors.dotsSecondaryText)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(spacing: 12) {
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            onEdit()
+                        } label: {
+                            Text(L.string("edit_meditation_time", language: appLanguage))
+                                .font(AppFont.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(AppColors.rejoyOrange)
+
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            onLearn()
+                        } label: {
+                            Text(L.string("how_to_meditate", language: appLanguage))
+                                .font(AppFont.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(.top, 8)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+            }
+            .navigationTitle(L.string("rejoy_meditation_time", language: appLanguage))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L.string("done", language: appLanguage)) {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct RejoyMeditationSetupSheet: View {
     @Environment(\.appLanguage) private var appLanguage
     let onDismiss: () -> Void
@@ -1205,67 +1414,6 @@ private struct OngoingSessionRowView: View {
     }
 }
 
-private struct RejoyAccumulatingExplanationSheet: View {
-    let unlockInText: String?
-    @Environment(\.appLanguage) private var appLanguage
-    @Environment(\.dismiss) private var dismiss
-    @State private var showRejoyMeditationCarousel = false
-
-    var body: some View {
-        NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    Image(systemName: "figure.mind.and.body")
-                        .font(AppFont.rounded(size: 72))
-                        .foregroundStyle(AppColors.rejoyOrange)
-
-                    Text(L.string("accumulating_sheet_title", language: appLanguage))
-                        .font(AppFont.title2)
-                        .fontWeight(.semibold)
-                        .multilineTextAlignment(.center)
-
-                    if let text = unlockInText {
-                        Text(text)
-                            .font(AppFont.title3)
-                            .fontWeight(.medium)
-                            .foregroundStyle(AppColors.rejoyOrange)
-                    }
-
-                    Text(L.string("accumulating_sheet_explainer", language: appLanguage))
-                        .font(AppFont.body)
-                        .foregroundStyle(AppColors.dotsSecondaryText)
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        showRejoyMeditationCarousel = true
-                    } label: {
-                        Text(L.string("learn_more_rejoy_meditation", language: appLanguage))
-                            .font(AppFont.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(AppColors.rejoyOrange)
-                    }
-                    .padding(.top, 8)
-                }
-                .padding(24)
-            }
-            .navigationTitle(L.string("rejoy_button", language: appLanguage))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L.string("understood", language: appLanguage)) {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(isPresented: $showRejoyMeditationCarousel) {
-                RejoyMeditationCarouselSheet()
-            }
-        }
-    }
-}
-
 struct SessionRowView: View {
     let session: Session
     /// When set, timeline shows this day’s attributed slice (multi-day sessions).
@@ -1278,9 +1426,10 @@ struct SessionRowView: View {
     let rejoyUnlockInText: String?
     var showRejoyHint: Bool = false
     var onRejoyHintDismiss: (() -> Void)? = nil
+    /// Brief emphasis after saving a new session (e.g. returning from dedication).
+    var isSpotlight: Bool = false
     let onRejoy: () -> Void
     @Environment(\.appLanguage) private var appLanguage
-    @State private var showAccumulatingExplanation = false
 
     private var activity: ActivityType? {
         activityTypes.first { $0.id == session.activityTypeId }
@@ -1294,41 +1443,55 @@ struct SessionRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            NavigationLink {
-                SessionDetailView(session: session)
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: activity?.symbolName ?? "circle")
-                        .font(AppFont.title2)
-                        .foregroundStyle(isRejoyed ? Color(.secondaryLabel) : AppColors.rejoyOrange)
-                        .frame(width: 36, alignment: .center)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(activity.map { L.activityName($0.name, language: appLanguage) } ?? L.string("activity", language: appLanguage))
-                            .font(AppFont.headline)
-                            .foregroundStyle(.primary)
-                        Text("\(L.formattedTimelineMinutes(durationForDisplay, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), seedsForDisplay))")
-                            .font(AppFont.subheadline)
-                            .foregroundStyle(AppColors.dotsStatsText)
-                    }
-                    Spacer(minLength: 0)
+        NavigationLink {
+            SessionDetailView(
+                session: session,
+                rejoyAvailabilityUnlockText: isAccumulating ? rejoyUnlockInText : nil
+            )
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: activity?.symbolName ?? "circle")
+                    .font(AppFont.title2)
+                    .foregroundStyle(isRejoyed ? Color(.secondaryLabel) : AppColors.rejoyOrange)
+                    .frame(width: 36, alignment: .center)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(activity.map { L.activityName($0.name, language: appLanguage) } ?? L.string("activity", language: appLanguage))
+                        .font(AppFont.headline)
+                        .foregroundStyle(.primary)
+                    Text("\(L.formattedTimelineMinutes(durationForDisplay, language: appLanguage)) · \(String(format: L.string("seeds_count", language: appLanguage), seedsForDisplay))")
+                        .font(AppFont.subheadline)
+                        .foregroundStyle(AppColors.dotsStatsText)
                 }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
+                Spacer(minLength: 0)
+                HStack(alignment: .center, spacing: 10) {
+                    rejoyPill
+                    Image(systemName: "chevron.right")
+                        .font(AppFont.rounded(size: 14, weight: .semibold))
+                        .foregroundStyle(AppColors.trailing)
+                        .accessibilityHidden(true)
+                }
             }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .trailing, spacing: 2) {
+            .padding(16)
+            .background(AppColors.cardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 24).stroke(AppColors.dotsBorder, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(AppColors.rejoyOrange.opacity(isSpotlight ? 0.72 : 0), lineWidth: isSpotlight ? 2.5 : 0)
+            )
+            .overlay(alignment: .topTrailing) {
                 if showRejoyHint {
                     RejoyHintCallout(onDismiss: { onRejoyHintDismiss?() }, tailDirection: .bottom)
+                        .padding(.trailing, 34)
+                        .offset(y: -112)
+                        .zIndex(2)
                 }
-                rejoyButton
             }
+            .shadow(color: AppColors.rejoyOrange.opacity(isSpotlight ? 0.14 : 0), radius: isSpotlight ? 10 : 0, y: 2)
+            .contentShape(RoundedRectangle(cornerRadius: 24))
         }
-        .padding(16)
-        .background(AppColors.cardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(AppColors.dotsBorder, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .buttonStyle(.plain)
+        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isSpotlight)
     }
 
     private var rejoyButtonLabel: String {
@@ -1355,36 +1518,46 @@ struct SessionRowView: View {
         return AppColors.rejoyOrange
     }
 
-    private var rejoyButton: some View {
-        Button {
-            if isRejoyed { return }
-            if isAccumulating {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showAccumulatingExplanation = true
-            } else if canRejoy {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                onRejoy()
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text(rejoyButtonLabel)
-                    .font(AppFont.subheadline)
-                    .fontWeight(.medium)
-                if let icon = rejoyButtonIcon {
-                    Image(systemName: icon)
-                        .font(AppFont.subheadline)
+    private var rejoyPill: some View {
+        Group {
+            if canRejoy && !isRejoyed && !isAccumulating {
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    onRejoy()
+                } label: {
+                    rejoyPillContents
                 }
+                .buttonStyle(.borderless)
+            } else {
+                rejoyPillContents
             }
-            .foregroundStyle(rejoyButtonFgColor)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(rejoyButtonBgColor)
-            .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
-        .disabled(isRejoyed)
-        .sheet(isPresented: $showAccumulatingExplanation) {
-            RejoyAccumulatingExplanationSheet(unlockInText: rejoyUnlockInText)
+    }
+
+    private var rejoyPillContents: some View {
+        HStack(spacing: 4) {
+            Text(rejoyButtonLabel)
+                .font(AppFont.subheadline)
+                .fontWeight(.medium)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            if let icon = rejoyButtonIcon {
+                Image(systemName: icon)
+                    .font(AppFont.subheadline)
+            }
         }
+        .foregroundStyle(rejoyButtonFgColor)
+        .padding(.horizontal, isAccumulating ? 9 : 12)
+        .padding(.vertical, isAccumulating ? 7 : 8)
+        .background(
+            Capsule()
+                .fill(rejoyButtonBgColor)
+                .overlay {
+                    if isAccumulating {
+                        Capsule()
+                            .stroke(AppColors.dotsRejoyCountdownPillBorder, lineWidth: 1)
+                    }
+                }
+        )
     }
 }

@@ -17,7 +17,8 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
 
     private var timer: Timer?
     private let seedsPerSecond: Int
-    var onTick: (() -> Void)?
+    /// Pause, resume, and other discrete timing changes (not every clock tick).
+    var onSignificantTimingChange: (() -> Void)?
 
     var displayedSeconds: Int { isPaused ? totalPausedSeconds : elapsedSeconds }
     var seeds: Int { displayedSeconds * seedsPerSecond }
@@ -40,7 +41,6 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
                 self.elapsedSeconds = self.totalPausedSeconds + Int(Date().timeIntervalSince(self.startDate))
             }
             self.persistState()
-            self.onTick?()
         }
         RunLoop.main.add(timer!, forMode: .common)
     }
@@ -52,6 +52,7 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
         timer?.invalidate()
         timer = nil
         persistState()
+        onSignificantTimingChange?()
     }
 
     func resumeTimer() {
@@ -62,10 +63,10 @@ final class ActiveTrackingSession: ObservableObject, Equatable {
             guard let self else { return }
             self.elapsedSeconds = self.totalPausedSeconds + Int(Date().timeIntervalSince(self.startDate))
             self.persistState()
-            self.onTick?()
         }
         RunLoop.main.add(timer!, forMode: .common)
         persistState()
+        onSignificantTimingChange?()
     }
 
     func stopTimer() {

@@ -27,5 +27,7 @@ struct SettingsRow: View {
                     .foregroundStyle(AppColors.trailing)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }

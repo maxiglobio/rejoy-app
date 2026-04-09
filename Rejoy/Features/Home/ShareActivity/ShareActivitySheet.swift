@@ -2,14 +2,20 @@ import SwiftUI
 import SwiftData
 import UIKit
 
-struct ShareActivitySheet: View {
-    @Environment(\.dismiss) private var dismiss
+// MARK: - Embedded sticker + copy (session detail, share sheet)
+
+/// Sticker carousel, copy control, and full hint — used on the session page and in the share sheet.
+struct ActivityStickerSharePanel: View {
     @Environment(\.appLanguage) private var appLanguage
     @StateObject private var profileState = ProfileState.shared
 
     let session: Session
     let activity: ActivityType?
     let isRejoyed: Bool
+    /// When true (e.g. share sheet), inserts a flexible spacer so the Copy block sits toward the bottom.
+    var separateCopyWithSpacer: Bool = false
+    /// When embedded in `List` (session detail), omit extra horizontal padding so the checkerboard matches other sections’ width.
+    var listEmbedded: Bool = false
 
     @State private var selectedPage = 0
     @State private var isCopied = false
@@ -20,32 +26,31 @@ struct ShareActivitySheet: View {
         StickerData.from(session: session, activity: activity, isRejoyed: isRejoyed, language: appLanguage, avatarImage: profileState.avatarImage)
     }
 
+    private var horizontalGutter: CGFloat { listEmbedded ? 0 : 16 }
+    /// Inner padding inside the checkerboard; list rows use 0 so the chess area matches Time / Dedication width.
+    private var stickerPreviewInnerHorizontal: CGFloat { listEmbedded ? 0 : 16 }
+    /// Inner checkerboard corners; list row uses the same system grouped cell as Dedication / Time when embedded.
+    private var checkerboardCornerRadius: CGFloat { listEmbedded ? 12 : 20 }
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                stickerPreviewSection
+        VStack(spacing: 0) {
+            stickerPreviewSection
+            if separateCopyWithSpacer {
                 Spacer(minLength: 0)
-                copySection
             }
-            .background(AppColors.background)
-            .navigationTitle(L.string("share_activity", language: appLanguage))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L.string("close", language: appLanguage)) {
-                        dismiss()
-                    }
-                }
-            }
-            .presentationDetents([.height(560)])
+            copySection
         }
+        .frame(maxWidth: .infinity)
+        .frame(maxHeight: separateCopyWithSpacer ? .infinity : nil)
     }
 
     private var stickerCarousel: some View {
         GeometryReader { geo in
-            let maxStickerWidth = geo.size.width - 32
+            // Page-style TabView adds ~12–16pt horizontal inset per side; pull pages flush so the card matches Dedication width.
+            let pageHorizontalPull: CGFloat = listEmbedded ? 14 : 0
+            let maxStickerWidth = geo.size.width + (listEmbedded ? pageHorizontalPull * 2 : 0) - (listEmbedded ? 0 : 32)
             TabView(selection: $selectedPage) {
-                stickerPage(StickerV1View(data: stickerData, language: appLanguage), maxWidth: maxStickerWidth, designSize: CGSize(width: 332, height: 130))
+                stickerPage(StickerV1View(data: stickerData, language: appLanguage), maxWidth: maxStickerWidth, designSize: CGSize(width: 332, height: 130), maxHeight: 108)
                     .tag(0)
                 stickerPage(StickerV2View(data: stickerData, language: appLanguage), maxWidth: maxStickerWidth, designSize: CGSize(width: 310, height: 215))
                     .tag(1)
@@ -57,14 +62,15 @@ struct ShareActivitySheet: View {
                     .tag(4)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .padding(.horizontal, listEmbedded ? -pageHorizontalPull : 0)
         }
-        .frame(height: 280)
-        .padding(.top, 24)
-        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
+        .padding(.top, 6)
+        .padding(.bottom, 4)
     }
 
-    private func stickerPage<V: View>(_ view: V, maxWidth: CGFloat, designSize: CGSize) -> some View {
-        let maxHeight: CGFloat = 200
+    private func stickerPage<V: View>(_ view: V, maxWidth: CGFloat, designSize: CGSize, maxHeight: CGFloat = 132) -> some View {
         let scaleW = maxWidth / designSize.width
         let scaleH = maxHeight / designSize.height
         let scale = min(1, scaleW, scaleH)
@@ -86,8 +92,8 @@ struct ShareActivitySheet: View {
                     .frame(width: 8, height: 8)
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 16)
+        .padding(.horizontal, listEmbedded ? 0 : 24)
+        .padding(.bottom, 8)
     }
 
     private var stickerPreviewSection: some View {
@@ -95,32 +101,33 @@ struct ShareActivitySheet: View {
             stickerCarousel
             pageIndicator
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 24)
+        .padding(.vertical, 6)
+        .padding(.horizontal, stickerPreviewInnerHorizontal)
         .frame(maxWidth: .infinity)
         .background(CheckerboardBackground())
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
+        .clipShape(RoundedRectangle(cornerRadius: checkerboardCornerRadius, style: .continuous))
+        .padding(.horizontal, horizontalGutter)
+        // Match vertical breathing room with other grouped cells (Dedication has comfortable top inset).
+        .padding(.top, listEmbedded ? 12 : 4)
     }
 
     private var copySection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             Button {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 copyToClipboard()
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 20))
-                    Text(isCopied ? L.string("copied", language: appLanguage) : L.string("copy_image", language: appLanguage))
-                        .font(AppFont.headline)
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(isCopied ? L.string("copied", language: appLanguage) : L.string("copy_badge", language: appLanguage))
+                        .font(AppFont.rounded(size: 15, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, 9)
                 .background(AppColors.rejoyOrange)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
             .disabled(isCopied)
@@ -129,12 +136,12 @@ struct ShareActivitySheet: View {
                 .font(AppFont.footnote)
                 .foregroundStyle(AppColors.dotsSecondaryText)
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
-                .padding(.horizontal, 20)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .padding(.bottom, 32)
+        .padding(.horizontal, horizontalGutter)
+        .padding(.top, listEmbedded ? 12 : 10)
+        .padding(.bottom, listEmbedded ? 4 : 4)
     }
 
     @MainActor
@@ -199,6 +206,34 @@ struct ShareActivitySheet: View {
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run { isCopied = false }
+        }
+    }
+}
+
+// MARK: - Sheet wrapper
+
+struct ShareActivitySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appLanguage) private var appLanguage
+
+    let session: Session
+    let activity: ActivityType?
+    let isRejoyed: Bool
+
+    var body: some View {
+        NavigationStack {
+            ActivityStickerSharePanel(session: session, activity: activity, isRejoyed: isRejoyed, separateCopyWithSpacer: true)
+                .background(AppColors.background)
+            .navigationTitle(L.string("share_activity", language: appLanguage))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L.string("close", language: appLanguage)) {
+                        dismiss()
+                    }
+                }
+            }
+            .presentationDetents([.height(560)])
         }
     }
 }

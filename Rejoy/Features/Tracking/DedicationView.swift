@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import AVFoundation
 import Speech
+import UIKit
 
 private enum DedicationChromeStyle {
     /// Brand orange aligned with recording gradient top (#FF7A00)
@@ -20,22 +21,83 @@ private struct RecordingControlButtonStyle: ButtonStyle {
     }
 }
 
+/// Soft white ripples that expand from the mic/stop button and fade out one after another.
+/// Uses **thick strokes** and **moderate** blur so rings stay visible on the orange gradient (thin stroke + heavy blur was effectively invisible).
+/// Opacity uses sin(π·phase) so fade-in/out are smooth and phase wrap has **no** instant jump (unlike linear 1 − p).
+/// Kept outside the `Button` label so nothing clips the halo.
+private struct RecordingEnergyAura: View {
+    private let rippleCount = 4
+    private let cycle: TimeInterval = 3.4
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            ZStack {
+                ForEach(0..<rippleCount, id: \.self) { index in
+                    let stagger = Double(index) / Double(rippleCount)
+                    let phase = (t / cycle + stagger).truncatingRemainder(dividingBy: 1)
+                    let p = CGFloat(phase)
+                    // Smooth bell-shaped envelope: 0 at p=0 and p=1, peak mid-cycle — continuous at wrap.
+                    let envelope = pow(sin(Double(p) * .pi), 0.82)
+                    // Ease scale so expansion eases in/out (derivative ~0 at endpoints feels softer).
+                    let pEase = CGFloat((1 - cos(Double(p) * .pi)) / 2)
+                    // Extra falloff as the ring expands: outer / far radii lose opacity earlier (before max radius).
+                    let outerFalloff = 1.0 - 0.52 * pow(Double(pEase), 1.38)
+                    let fade = max(0, envelope * outerFalloff)
+                    ZStack {
+                        // Soft outer halo: radial fill that grows with the pulse (reads on orange).
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    colors: [
+                                        Color.white.opacity(0.2 * fade),
+                                        Color.white.opacity(0.07 * fade),
+                                        Color.clear
+                                    ],
+                                    center: .center,
+                                    startRadius: 52,
+                                    endRadius: 95 + pEase * 135
+                                )
+                            )
+                            .frame(width: 120, height: 120)
+                            .scaleEffect(1.0 + pEase * 1.95)
+                            .blur(radius: 2 + CGFloat(fade) * 4)
+                        // Ring edge: thick stroke + light blur so the band stays readable.
+                        Circle()
+                            .stroke(
+                                Color.white.opacity(0.62 * fade),
+                                lineWidth: 9 + pEase * 7
+                            )
+                            .frame(width: 118, height: 118)
+                            .scaleEffect(1.0 + pEase * 2.0)
+                            .blur(radius: 2 + CGFloat(fade) * 5)
+                    }
+                }
+            }
+            .frame(width: 440, height: 440)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 struct DedicationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appLanguage) private var appLanguage
+    @Environment(\.colorScheme) private var colorScheme
     let activity: ActivityType
     let durationSeconds: Int
     let wallClockStart: Date
     let seedsJarCoordinator: SeedsJarCoordinator
     let defaultDedicationText: String
-    let onComplete: () -> Void
+    let onComplete: (UUID) -> Void
 
     @StateObject private var recorder = DedicationRecorder()
     @State private var dedicationText: String
     @State private var showConfetti = false
 
-    init(activity: ActivityType, durationSeconds: Int, wallClockStart: Date, seedsJarCoordinator: SeedsJarCoordinator, defaultDedicationText: String, onComplete: @escaping () -> Void) {
+    init(activity: ActivityType, durationSeconds: Int, wallClockStart: Date, seedsJarCoordinator: SeedsJarCoordinator, defaultDedicationText: String, onComplete: @escaping (UUID) -> Void) {
         self.activity = activity
         self.durationSeconds = durationSeconds
         self.wallClockStart = wallClockStart
@@ -47,6 +109,7 @@ struct DedicationView: View {
     @State private var hasRecorded = false
     @State private var isTranscribing = false
     @State private var hasSaved = false
+    @FocusState private var dedicationFieldFocused: Bool
     /// Bumps SwiftUI to re-read mic/speech authorization after system prompts.
     @State private var permissionEpoch = 0
 
@@ -90,40 +153,58 @@ struct DedicationView: View {
                     RecordingAmbienceBackground()
                 }
 
-                ScrollView {
-                    VStack(spacing: 28) {
-                        activityHeader
-                        seedsBadge
+                Group {
+                    if recorder.isRecording {
+                        dictationRecordingLayout
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 28) {
+                                activityHeader
+                                seedsBadge
 
-                        switch voicePermissionPhase {
-                        case .ready, .needsSystemPrompt:
-                            voiceRecordSection
-                        case .blocked:
-                            voiceBlockedSection
+                                switch voicePermissionPhase {
+                                case .ready, .needsSystemPrompt:
+                                    voiceRecordSection
+                                case .blocked:
+                                    voiceBlockedSection
+                                }
+
+                                dedicationTextField
+
+                                // Tap empty space below the field to dismiss keyboard (toolbar "Done" also dismisses).
+                                if dedicationFieldFocused {
+                                    Color.clear
+                                        .frame(minHeight: 120)
+                                        .frame(maxWidth: .infinity)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            dedicationFieldFocused = false
+                                        }
+                                        .accessibilityHidden(true)
+                                }
+
+                                saveSection
+                            }
+                            .padding()
+                            .padding(.bottom, 8)
                         }
-
-                        dedicationTextField
-
-                        Spacer(minLength: 24)
-
-                        saveSection
+                        .scrollDismissesKeyboard(.interactively)
                     }
-                    .padding()
                 }
-                .scrollDismissesKeyboard(.interactively)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if showConfetti {
                     ConfettiView()
                         .allowsHitTesting(false)
                 }
             }
-            .navigationTitle(L.string("dedication", language: appLanguage))
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button(L.string("done", language: appLanguage)) {
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        dedicationFieldFocused = false
                     }
                 }
             }
@@ -132,10 +213,12 @@ struct DedicationView: View {
 
     private var activityHeader: some View {
         VStack(spacing: 8) {
-            Text(L.activityName(activity.name, language: appLanguage))
+            Text(String(format: L.string("dedication_for_activity", language: appLanguage), L.activityName(activity.name, language: appLanguage)))
                 .font(AppFont.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(DedicationChromeStyle.onGradientPrimary)
+                .foregroundStyle(recorder.isRecording ? Color.white : DedicationChromeStyle.onGradientPrimary)
+                .shadow(color: recorder.isRecording ? Color.black.opacity(0.25) : .clear, radius: 2, x: 0, y: 1)
+                .multilineTextAlignment(.center)
             Image(systemName: activity.symbolName)
                 .font(AppFont.rounded(size: 40))
                 .foregroundStyle(recorder.isRecording ? Color.white : DedicationChromeStyle.accentOrange)
@@ -145,63 +228,95 @@ struct DedicationView: View {
     private var seedsBadge: some View {
         Text(String(format: L.string("seeds_count", language: appLanguage), seeds))
             .font(AppFont.title3)
-            .foregroundStyle(DedicationChromeStyle.onGradientSecondary)
+            .foregroundStyle(recorder.isRecording ? Color.white.opacity(0.92) : DedicationChromeStyle.onGradientSecondary)
+            .shadow(color: recorder.isRecording ? Color.black.opacity(0.2) : .clear, radius: 2, x: 0, y: 1)
+    }
+
+    /// While dictating: header + seeds at top, energy around the mic, stop control pinned toward the bottom (thumb zone). No live transcript on screen.
+    private var dictationRecordingLayout: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 20) {
+                activityHeader
+                seedsBadge
+            }
+            Spacer(minLength: 16)
+            voiceRecordSection
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var voiceRecordSection: some View {
         VStack(spacing: 16) {
             if !hasRecorded {
                 let needsSetup = voicePermissionPhase == .needsSystemPrompt
-                Text(needsSetup ? L.string("voice_permissions_tap_mic_hint", language: appLanguage) : L.string("record_dedication", language: appLanguage))
-                    .font(AppFont.headline)
-                    .foregroundStyle(DedicationChromeStyle.onGradientSecondary)
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    if needsSetup && !recorder.isRecording {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        requestMicrophoneThenSpeechAuthorization()
-                        return
-                    }
-                    if recorder.isRecording {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        isTranscribing = true
-                        recorder.stopRecordingAndTranscribe { text in
-                            isTranscribing = false
-                            if let text = text, !text.isEmpty {
-                                dedicationText = text
-                            }
-                            hasRecorded = true
-                        }
-                    } else {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        recorder.startRecording()
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(.ultraThinMaterial)
-                        Circle()
-                            .fill(Color.white.opacity(0.2))
-                            .blendMode(.plusLighter)
-
-                        if isTranscribing {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(.white)
-                                .scaleEffect(1.2)
-                        } else {
-                            Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
-                                .font(AppFont.rounded(size: 48))
-                                .foregroundStyle(recorder.isRecording ? Color.black : DedicationChromeStyle.accentOrange)
-                        }
-                    }
-                    .frame(width: 120, height: 120)
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 8)
+                if needsSetup {
+                    Text(L.string("voice_permissions_tap_mic_hint", language: appLanguage))
+                        .font(AppFont.headline)
+                        .foregroundStyle(DedicationChromeStyle.onGradientSecondary)
+                        .multilineTextAlignment(.center)
                 }
-                .buttonStyle(RecordingControlButtonStyle())
-                .disabled(isTranscribing)
+
+                ZStack {
+                    if recorder.isRecording && !isTranscribing {
+                        RecordingEnergyAura()
+                            .zIndex(0)
+                            .layoutPriority(1)
+                    }
+                    Button {
+                        if needsSetup && !recorder.isRecording {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            requestMicrophoneThenSpeechAuthorization()
+                            return
+                        }
+                        if recorder.isRecording {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            isTranscribing = true
+                            recorder.stopRecordingAndTranscribe { text in
+                                isTranscribing = false
+                                if let text = text, !text.isEmpty {
+                                    dedicationText = text
+                                }
+                                hasRecorded = true
+                            }
+                        } else {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            recorder.startRecording()
+                        }
+                    } label: {
+                        ZStack {
+                            if recorder.isRecording && !isTranscribing {
+                                Circle()
+                                    .fill(Color.white)
+                            } else {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                Circle()
+                                    .fill(Color.white.opacity(0.2))
+                                    .blendMode(.plusLighter)
+                            }
+
+                            if isTranscribing {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(.white)
+                                    .scaleEffect(1.2)
+                            } else {
+                                Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                                    .font(AppFont.rounded(size: 48))
+                                    .foregroundStyle(recorder.isRecording ? Color.black : DedicationChromeStyle.accentOrange)
+                            }
+                        }
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 8)
+                    }
+                    .buttonStyle(RecordingControlButtonStyle())
+                    .disabled(isTranscribing)
+                    .zIndex(1)
+                }
 
                 Group {
                     if recorder.isRecording {
@@ -213,7 +328,9 @@ struct DedicationView: View {
                     }
                 }
                 .font(AppFont.subheadline)
-                .foregroundStyle(DedicationChromeStyle.onGradientTertiary)
+                .fontWeight(recorder.isRecording ? .semibold : .regular)
+                .foregroundStyle(recorder.isRecording ? Color.white.opacity(0.95) : DedicationChromeStyle.onGradientTertiary)
+                .shadow(color: recorder.isRecording ? Color.black.opacity(0.35) : .clear, radius: 3, x: 0, y: 1)
                 .multilineTextAlignment(.center)
 
                 if let error = recorder.errorMessage {
@@ -224,7 +341,7 @@ struct DedicationView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, recorder.isRecording ? 8 : 24)
     }
 
     private var voiceBlockedSection: some View {
@@ -265,6 +382,40 @@ struct DedicationView: View {
         }
     }
 
+    /// Text editor surface: dark mode uses a recessed charcoal fill; light mode uses a light card.
+    private var dedicationFieldFill: Color {
+        switch colorScheme {
+        case .dark:
+            return Color(white: 0.17)
+        case .light:
+            return Color.white.opacity(0.72)
+        @unknown default:
+            return Color.white.opacity(0.72)
+        }
+    }
+
+    private var dedicationFieldStroke: Color {
+        switch colorScheme {
+        case .dark:
+            return Color.white.opacity(0.14)
+        case .light:
+            return Color.gray.opacity(0.32)
+        @unknown default:
+            return Color.gray.opacity(0.32)
+        }
+    }
+
+    private var dedicationFieldTextColor: Color {
+        switch colorScheme {
+        case .dark:
+            return Color.white.opacity(0.94)
+        case .light:
+            return Color.primary.opacity(0.9)
+        @unknown default:
+            return Color.primary.opacity(0.9)
+        }
+    }
+
     private func requestSpeechAuthorizationIfNeeded() {
         guard AVAudioSession.sharedInstance().recordPermission == .granted else {
             permissionEpoch += 1
@@ -288,25 +439,36 @@ struct DedicationView: View {
                 .foregroundStyle(DedicationChromeStyle.onGradientPrimary)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
+                    .fill(dedicationFieldFill)
                     .background {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(.thinMaterial)
+                        if colorScheme == .light {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(.thinMaterial)
+                        }
                     }
                     .overlay {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.gray.opacity(0.32), lineWidth: 1)
+                            .strokeBorder(dedicationFieldStroke, lineWidth: 1)
                     }
                     .frame(maxWidth: .infinity, minHeight: 100, maxHeight: 200)
                 TextEditor(text: $dedicationText)
                     .scrollContentBackground(.hidden)
-                    .foregroundStyle(Color.primary.opacity(0.88))
+                    .foregroundStyle(dedicationFieldTextColor)
                     .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
                     .frame(maxWidth: .infinity, minHeight: 100, maxHeight: 200, alignment: .topLeading)
-                    .disabled(recorder.isRecording)
+                    .focused($dedicationFieldFocused)
+                // TextEditor often hit-tests only the glyphs; this fills the framed area so any tap focuses and shows the keyboard.
+                if !dedicationFieldFocused {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(maxWidth: .infinity, minHeight: 100, maxHeight: 200)
+                        .onTapGesture {
+                            dedicationFieldFocused = true
+                        }
+                        .accessibilityHidden(true)
+                }
             }
             .frame(maxWidth: .infinity)
-            .opacity(recorder.isRecording ? 0.66 : 1)
         }
     }
 
@@ -317,16 +479,17 @@ struct DedicationView: View {
             guard !hasSaved else { return }
             hasSaved = true
             let durationMinutes = durationSeconds / 60
-            saveSession()
+            let savedSessionId = saveSession()
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             showConfetti = true
             seedsJarCoordinator.addSeeds(durationMinutes: durationMinutes)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                onComplete()
+                onComplete(savedSessionId)
             }
         } label: {
             Text(L.string("save_seeds", language: appLanguage))
                 .font(AppFont.headline)
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding()
         }
@@ -336,7 +499,7 @@ struct DedicationView: View {
         .opacity(disabled && !hasSaved ? 0.45 : 1)
     }
 
-    private func saveSession() {
+    private func saveSession() -> UUID {
         let endDate = Date()
         var startDate = wallClockStart
         if startDate >= endDate {
@@ -357,6 +520,7 @@ struct DedicationView: View {
             seeds: seeds,
             dedicationText: dedicationText
         )
+        let savedId = session.id
         modelContext.insert(session)
         try? modelContext.save()
 
@@ -366,5 +530,7 @@ struct DedicationView: View {
                 try? await SupabaseService.shared.insertSession(session)
             }
         }
+        return savedId
     }
+
 }

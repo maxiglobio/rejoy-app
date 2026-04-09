@@ -12,6 +12,11 @@ struct AchievementPopupView: View {
         unlockedAt ?? AchievementService.unlockDate(for: achievement.id)
     }
 
+    /// Matches in-app language for `Text(_:style: .date)` (system locale alone would show English month names when UI is Russian, etc.).
+    private var popupLocale: Locale {
+        AppLanguage(rawValue: appLanguage)?.locale ?? Locale.current
+    }
+
     var body: some View {
         ZStack {
             // Soft frosted backdrop — warmer and less flat than solid gray
@@ -58,6 +63,9 @@ struct AchievementPopupView: View {
                                 .font(AppFont.title)
                                 .fontWeight(.bold)
                                 .multilineTextAlignment(.center)
+                                .lineLimit(8)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity)
                                 .foregroundStyle(.primary)
 
                             Text(achievement.description(for: appLanguage))
@@ -102,6 +110,7 @@ struct AchievementPopupView: View {
                 .padding(.top, 20)
                 .opacity(appeared ? 1 : 0)
             }
+            .environment(\.locale, popupLocale)
         }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {

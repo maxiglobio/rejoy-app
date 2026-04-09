@@ -9,47 +9,35 @@ struct SettingsView: View {
     var selectedTab: Int = 0
     var onOpenDate: ((Date) -> Void)? = nil
 
-    @Environment(\.modelContext) private var modelContext
     @AppStorage("appLanguage") private var appLanguageStorage = ""
-    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
-    @AppStorage("hasCompletedStories") private var hasCompletedStories = false
-    @AppStorage("hiddenActivityTypeIds") private var hiddenActivityTypeIdsRaw = ""
     @AppStorage("rejoyedSessionIds") private var rejoyedIdsRaw = ""
-    @Query(sort: \ActivityType.sortOrder) private var activityTypes: [ActivityType]
     @Query(sort: \Session.startDate, order: .reverse) private var allSessions: [Session]
+    @Query(sort: \ActivityType.sortOrder, order: .reverse) private var activityTypes: [ActivityType]
 
     @StateObject private var profileState = ProfileState.shared
     @ObservedObject private var supabaseService = SupabaseService.shared
-    @State private var micStatus: PermissionStatus = .unknown
-    @State private var showDeepUpgrade = false
-    @State private var showAltar = false
-    @State private var speechStatus: PermissionStatus = .unknown
-    @State private var notificationStatus: PermissionStatus = .unknown
-    @State private var showAddActivity = false
-    @State private var recognitionLocale: String = AppSettings.recognitionLocaleIdentifier
-    @State private var meditationEnabled: Bool = false
-    @State private var showNotificationDeniedAlert = false
-    @State private var showHowToUseRejoyCarousel = false
-    @State private var showRejoyMeditationCarousel = false
-    @State private var showSeedsInfoCarousel = false
+    @ObservedObject private var altarFocus = AltarFocusController.shared
+
+    private enum ProfileMainSegment: Int, CaseIterable {
+        case profile = 0
+        case altar = 1
+    }
+
+    @State private var profileMainSegment: ProfileMainSegment = .profile
     @State private var selectedAchievement: Achievement?
     @State private var selectedAchievementUnlockedAt: Date?
     @State private var showRewardsGallery = false
-    @State private var activityToDelete: ActivityType? = nil
-    @State private var activityToEdit: ActivityType? = nil
-    @State private var profileVisibilityTrailingValue: String = ""
-    @State private var profileVisibilityIsVisible: Bool? = nil
-    @State private var showMeditationTimePicker = false
-    @State private var showRejoyMeditationSheet = false
-    @State private var displayNameText: String = ""
     @State private var achievementRefreshTrigger = UUID()
-    @State private var meditationTime: Date = {
-        let cal = Calendar.current
-        var dc = DateComponents()
-        dc.hour = 7
-        dc.minute = 0
-        return cal.date(from: dc) ?? Date()
-    }()
+    @State private var showHowToUseRejoyCarousel = false
+    @State private var showRejoyMeditationCarousel = false
+    @State private var showSeedsInfoCarousel = false
+
+    @Environment(\.openURL) private var openURL
+
+    private enum SupportContact {
+        static let emailURL = URL(string: "mailto:maxim@globio.io")!
+        static let telegramURL = URL(string: "https://t.me/maximshishkinv")!
+    }
 
     private func seedsForMonth(_ date: Date) -> Int {
         let cal = Calendar.current
@@ -110,13 +98,6 @@ struct SettingsView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
 
-    private var meditationTimeFormatted: String {
-        let cal = Calendar.current
-        let h = cal.component(.hour, from: meditationTime)
-        let m = cal.component(.minute, from: meditationTime)
-        return String(format: "%d:%02d", h, m)
-    }
-
     private var monthSeedsFormatted: String {
         formatSeeds(monthSeeds)
     }
@@ -125,171 +106,135 @@ struct SettingsView: View {
         Set(rejoyedIdsRaw.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
     }
 
+    private var showProfileAltarTabs: Bool {
+        supabaseService.isSignedIn && supabaseService.altarEnabled
+    }
+
+    private func syncAltarFocusState() {
+        let focused = showProfileAltarTabs && profileMainSegment == .altar
+        AltarFocusController.shared.setAltarFocused(focused)
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
-                    profileHeaderCard
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear.preference(
-                                    key: ProfileHeaderMinYKey.self,
-                                    value: geo.frame(in: .named("profileScroll")).minY
-                                )
+            Group {
+                if showProfileAltarTabs {
+                    GeometryReader { geo in
+                        let w = geo.size.width
+                        let h = geo.size.height
+                        HStack(spacing: 0) {
+                            ScrollView(showsIndicators: false) {
+                                profileScrollStack
+                                    .frame(width: w)
                             }
-                        )
-                    calendarSectionContent
-                    achievementsSectionContent
-                    settingsCardContent
-                    howToUseRejoyCard
-                    howToMeditateCard
-                    whatIsSeedsCard
-                    accountCard
-                    profileFooter
+                            .coordinateSpace(name: "profileScroll")
+                            .frame(width: w, height: h)
+                            AltarEditorContent()
+                                .frame(width: w, height: h)
+                        }
+                        .offset(x: profileMainSegment == .profile ? 0 : -w)
+                        .animation(.spring(response: 0.38, dampingFraction: 0.88), value: profileMainSegment)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        profileScrollStack
+                    }
+                    .coordinateSpace(name: "profileScroll")
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 90)
             }
-            .coordinateSpace(name: "profileScroll")
             .onPreferenceChange(ProfileHeaderMinYKey.self) { profileHeaderMinY = $0 }
             .refreshable {
-                refreshPermissionStatus()
                 await SupabaseService.shared.fetchProfile()
                 await AchievementService.syncCountsFromSupabase()
-                await loadProfileVisibilityState()
                 await MainActor.run {
                     achievementRefreshTrigger = UUID()
                 }
             }
             .background(AppColors.background)
-            .navigationTitle(L.string("profile", language: appLanguageStorage))
+            .navigationTitle(showProfileAltarTabs ? "" : L.string("profile", language: appLanguageStorage))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(altarFocus.isAltarFocused ? .hidden : .visible, for: .tabBar)
+            .toolbarBackground(altarFocus.isAltarFocused ? .hidden : .visible, for: .tabBar)
+            .animation(.easeInOut(duration: 0.28), value: altarFocus.isAltarFocused)
             .overlay {
-                GeometryReader { geo in
-                    let safeTop = geo.safeAreaInsets.top
-                    let centerX = geo.size.width / 2
-                    let startY = safeTop + 59
-                    let endX: CGFloat = 30
-                    let endY = max(44, safeTop - 22)
-                    let avatarSize: CGFloat = 110 * (1.0 - headerScrollProgress * 0.75)
-                    let posX = (1.0 - headerScrollProgress) * centerX + headerScrollProgress * endX
-                    let posY = (1.0 - headerScrollProgress) * startY + headerScrollProgress * endY
+                if !showProfileAltarTabs || profileMainSegment == .profile {
+                    GeometryReader { geo in
+                        let safeTop = geo.safeAreaInsets.top
+                        let centerX = geo.size.width / 2
+                        let startY = safeTop + 59
+                        let endX: CGFloat = 30
+                        let endY = max(44, safeTop - 22)
+                        let avatarSize: CGFloat = 110 * (1.0 - headerScrollProgress * 0.75)
+                        let posX = (1.0 - headerScrollProgress) * centerX + headerScrollProgress * endX
+                        let posY = (1.0 - headerScrollProgress) * startY + headerScrollProgress * endY
 
-                    ProfileAvatarView(profileState: profileState, size: avatarSize)
-                        .position(x: posX, y: posY)
-                        .opacity(headerScrollProgress)
-                        .allowsHitTesting(false)
+                        ProfileAvatarView(profileState: profileState, size: avatarSize)
+                            .position(x: posX, y: posY)
+                            .opacity(headerScrollProgress)
+                            .allowsHitTesting(false)
+                    }
+                    .ignoresSafeArea(edges: .top)
                 }
-                .ignoresSafeArea(edges: .top)
             }
             .animation(.easeInOut(duration: 0.25), value: headerScrollProgress)
+            .animation(.easeInOut(duration: 0.28), value: profileMainSegment)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if supabaseService.isDeepFeatureAvailable {
-                        if supabaseService.planType == .dip {
-                            Button {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                showAltar = true
-                            } label: {
-                                Image(systemName: "sparkles")
-                                    .foregroundStyle(AppColors.rejoyOrange)
-                            }
-                        } else {
-                            Button {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                showDeepUpgrade = true
-                            } label: {
-                                Text(L.string("upgrade_to_rejoy_deep", language: appLanguageStorage))
-                                    .font(AppFont.footnote)
-                                    .foregroundStyle(AppColors.rejoyOrange)
-                            }
+                if profileMainSegment == .profile {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        ShareLink(
+                            item: "\(String(format: L.string("share_app_message_with_seeds", language: appLanguageStorage), monthSeedsFormatted))\(LegalDocumentLinks.appStore.absoluteString)",
+                            subject: Text(L.string("share_app", language: appLanguageStorage))
+                        ) {
+                            Image(systemName: "square.and.arrow.up")
                         }
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    ShareLink(
-                        item: "\(String(format: L.string("share_app_message_with_seeds", language: appLanguageStorage), monthSeedsFormatted))https://testflight.apple.com/join/Kfe4r5aN",
-                        subject: Text(L.string("share_app", language: appLanguageStorage))
-                    ) {
-                        Image(systemName: "square.and.arrow.up")
+                if showProfileAltarTabs {
+                    ToolbarItem(placement: .principal) {
+                        Picker("", selection: $profileMainSegment) {
+                            Text(L.string("profile", language: appLanguageStorage)).tag(ProfileMainSegment.profile)
+                            Text(L.string("altar_title", language: appLanguageStorage)).tag(ProfileMainSegment.altar)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 280)
                     }
                 }
+                if profileMainSegment == .profile {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink {
+                            ProfileSettingsView()
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                }
+            }
+            .onChange(of: supabaseService.altarEnabled) { _, enabled in
+                if !enabled { profileMainSegment = .profile }
+                syncAltarFocusState()
+            }
+            .onChange(of: supabaseService.isSignedIn) { _, signedIn in
+                if !signedIn { profileMainSegment = .profile }
+                syncAltarFocusState()
+            }
+            .onChange(of: profileMainSegment) { _, _ in
+                syncAltarFocusState()
+            }
+            .onDisappear {
+                AltarFocusController.shared.setAltarFocused(false)
             }
             .onAppear {
+                syncAltarFocusState()
                 DispatchQueue.main.async { Slide2VideoPreloader.shared.preload() }
-                refreshPermissionStatus()
-                recognitionLocale = AppSettings.recognitionLocaleIdentifier
-                displayNameText = ProfileState.displayName ?? ""
                 Task {
                     await SupabaseService.shared.fetchProfile()
-                    await MainActor.run { displayNameText = ProfileState.displayName ?? "" }
                     await AchievementService.syncCountsFromSupabase()
-                    await loadProfileVisibilityState()
-                    achievementRefreshTrigger = UUID()
-                }
-                if let time = AppSettings.rejoyMeditationTime, let h = time.hour, let m = time.minute {
-                    meditationEnabled = true
-                    var dc = DateComponents()
-                    dc.hour = h
-                    dc.minute = m
-                    meditationTime = Calendar.current.date(from: dc) ?? meditationTime
-                } else {
-                    meditationEnabled = false
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .profileVisibilityDidChange)) { _ in
-                Task { await loadProfileVisibilityState() }
-            }
-            .onChange(of: selectedTab) { _, newValue in
-                if newValue == 2 { Task { await loadProfileVisibilityState() } }
-            }
-            .onChange(of: recognitionLocale) { _, newValue in
-                AppSettings.recognitionLocaleIdentifier = newValue
-            }
-            .onChange(of: meditationEnabled) { _, enabled in
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                if enabled {
-                    // Request permission immediately (must be in response to user action for prompt to show)
-                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-                        DispatchQueue.main.async {
-                            refreshPermissionStatus()
-                            if granted {
-                                let cal = Calendar.current
-                                let h = cal.component(.hour, from: meditationTime)
-                                let m = cal.component(.minute, from: meditationTime)
-                                var dc = DateComponents()
-                                dc.hour = h
-                                dc.minute = m
-                                AppSettings.rejoyMeditationTime = dc
-                                RejoyMeditationNotificationService.scheduleNotification()
-                            } else {
-                                meditationEnabled = false
-                                showNotificationDeniedAlert = true
-                            }
-                        }
+                    await MainActor.run {
+                        achievementRefreshTrigger = UUID()
                     }
-                } else {
-                    AppSettings.rejoyMeditationTime = nil
-                    RejoyMeditationNotificationService.cancelNotification()
                 }
-            }
-            .onChange(of: meditationTime) { _, newTime in
-                guard meditationEnabled else { return }
-                let cal = Calendar.current
-                var dc = DateComponents()
-                dc.hour = cal.component(.hour, from: newTime)
-                dc.minute = cal.component(.minute, from: newTime)
-                AppSettings.rejoyMeditationTime = dc
-                RejoyMeditationNotificationService.scheduleNotification()
-            }
-            .sheet(isPresented: $showAddActivity) {
-                AddActivityView()
-            }
-            .sheet(isPresented: $showDeepUpgrade) {
-                DeepUpgradeSheet()
-            }
-            .sheet(isPresented: $showAltar) {
-                AltarSheet()
             }
             .sheet(isPresented: $showHowToUseRejoyCarousel) {
                 HowToUseRejoyCarouselSheet()
@@ -300,69 +245,30 @@ struct SettingsView: View {
             .sheet(isPresented: $showSeedsInfoCarousel) {
                 SeedsInfoCarouselSheet()
             }
-            .sheet(isPresented: $showRejoyMeditationSheet) {
-                NavigationStack {
-                    Form {
-                        Section {
-                            Toggle(L.string("rejoy_meditation_enable", language: appLanguageStorage), isOn: $meditationEnabled)
-                                .tint(AppColors.rejoyOrange)
-                            if meditationEnabled {
-                                Button {
-                                    showRejoyMeditationSheet = false
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                        showMeditationTimePicker = true
-                                    }
-                                } label: {
-                                    HStack {
-                                        Text(L.string("time_for_meditation", language: appLanguageStorage))
-                                        Spacer()
-                                        Text(meditationTimeFormatted)
-                                            .foregroundStyle(AppColors.trailing)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .navigationTitle(L.string("rejoy_meditation_time", language: appLanguageStorage))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(L.string("done", language: appLanguageStorage)) {
-                                showRejoyMeditationSheet = false
-                            }
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showMeditationTimePicker) {
-                NavigationStack {
-                    Form {
-                        DatePicker(L.string("time_for_meditation", language: appLanguageStorage), selection: $meditationTime, displayedComponents: .hourAndMinute)
-                    }
-                    .navigationTitle(L.string("time_for_meditation", language: appLanguageStorage))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(L.string("done", language: appLanguageStorage)) {
-                                showMeditationTimePicker = false
-                            }
-                        }
-                    }
-                }
-            }
-            .alert(L.string("notifications_required", language: appLanguageStorage), isPresented: $showNotificationDeniedAlert) {
-                Button(L.string("open_settings", language: appLanguageStorage)) {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                }
-                Button(L.string("done", language: appLanguageStorage), role: .cancel) { }
-            } message: {
-                Text(L.string("notifications_required_message", language: appLanguageStorage))
-            }
         }
     }
 
+    private var profileScrollStack: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            profileHeaderCard
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ProfileHeaderMinYKey.self,
+                            value: geo.frame(in: .named("profileScroll")).minY
+                        )
+                    }
+                )
+            calendarSectionContent
+            achievementsSectionContent
+            activityBalanceSectionContent
+            supportSectionContent
+            profileFooter
+                .padding(.top, -12)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 72)
+    }
 
     private var profileHeaderCard: some View {
         VStack(spacing: 8) {
@@ -503,235 +409,151 @@ struct SettingsView: View {
         }
     }
 
-    private var howToUseRejoyCard: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showHowToUseRejoyCarousel = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 17)
-                        .fill(AppColors.cardBackground)
-                        .frame(width: 82, height: 105)
-                    Image("HowToUseRejoyCover")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 82, height: 105)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L.string("how_to_use_rejoy", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 20, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(L.string("how_to_use_rejoy_explainer", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 14, weight: .regular))
-                        .foregroundStyle(AppColors.sectionHeader)
-                        .lineLimit(2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
-                    .font(AppFont.rounded(size: 16, weight: .medium))
-                    .foregroundStyle(AppColors.trailing)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
+    private var activityBalanceSectionContent: some View {
+        ActivityBalanceSection(
+            sessions: allSessions,
+            activityTypes: activityTypes,
+            appLanguage: appLanguageStorage
+        )
     }
 
-    private var howToMeditateCard: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showRejoyMeditationCarousel = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 17)
-                        .fill(AppColors.cardBackground)
-                        .frame(width: 82, height: 105)
-                    Image("HowToMeditate")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 82, height: 105)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L.string("how_to_meditate", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 20, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(L.string("accumulating_sheet_explainer", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 14, weight: .regular))
-                        .foregroundStyle(AppColors.sectionHeader)
-                        .lineLimit(2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
-                    .font(AppFont.rounded(size: 16, weight: .medium))
-                    .foregroundStyle(AppColors.trailing)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var whatIsSeedsCard: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showSeedsInfoCarousel = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 17)
-                        .fill(AppColors.cardBackground)
-                        .frame(width: 82, height: 105)
-                    Image("WhatAreSeeds")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 82, height: 105)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L.string("what_is_seeds", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 20, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(L.string("what_is_seeds_explainer", language: appLanguageStorage))
-                        .font(AppFont.rounded(size: 14, weight: .regular))
-                        .foregroundStyle(AppColors.sectionHeader)
-                        .lineLimit(2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
-                    .font(AppFont.rounded(size: 16, weight: .medium))
-                    .foregroundStyle(AppColors.trailing)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var settingsCardContent: some View {
+    private var supportSectionContent: some View {
         VStack(alignment: .leading, spacing: 4) {
-            ProfileSectionHeader(title: L.string("settings", language: appLanguageStorage))
-            ProfileCard {
-                VStack(spacing: 14) {
-                    if supabaseService.isSignedIn {
-                        HStack(spacing: 16) {
-                            Image(systemName: "person.fill")
-                                .font(AppFont.rounded(size: 20, weight: .medium))
-                                .foregroundStyle(Color(red: 1, green: 0.45, blue: 0.008))
-                                .frame(width: 28)
-                            Text(L.string("display_name", language: appLanguageStorage))
-                                .font(AppFont.rounded(size: 18, weight: .regular))
-                                .foregroundStyle(.primary)
-                            Spacer(minLength: 0)
-                            TextField(L.string("display_name_placeholder", language: appLanguageStorage), text: $displayNameText)
-                                .font(AppFont.rounded(size: 16, weight: .medium))
-                                .foregroundStyle(AppColors.trailing)
-                                .multilineTextAlignment(.trailing)
-                                .submitLabel(.done)
-                                .onSubmit { saveDisplayName() }
-                        }
-                        ProfileRowDivider()
-                        NavigationLink {
-                            ProfileVisibilityView(initialIsVisible: profileVisibilityIsVisible)
-                        } label: {
-                            SettingsRow(
-                                icon: "person.2.fill",
-                                title: L.string("profile_visibility", language: appLanguageStorage),
-                                trailingValue: profileVisibilityTrailingValue.isEmpty ? L.string("private", language: appLanguageStorage) : profileVisibilityTrailingValue
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        ProfileRowDivider()
-                    }
-                    Button {
-                        showRejoyMeditationSheet = true
-                    } label: {
-                        HStack(spacing: 16) {
-                            Image(systemName: "figure.mind.and.body")
-                                .font(AppFont.rounded(size: 20, weight: .medium))
-                                .foregroundStyle(Color(red: 1, green: 0.45, blue: 0.008))
-                                .frame(width: 28)
-                            Text(L.string("rejoy_meditation_time", language: appLanguageStorage))
-                                .font(AppFont.rounded(size: 18, weight: .regular))
-                                .foregroundStyle(.primary)
-                            Spacer(minLength: 0)
-                            if meditationEnabled {
-                                Text(meditationTimeFormatted)
-                                    .font(AppFont.rounded(size: 16, weight: .medium))
-                                    .foregroundStyle(AppColors.trailing)
-                            } else {
-                                Text(L.string("not_set", language: appLanguageStorage))
-                                    .font(AppFont.rounded(size: 16, weight: .semibold))
-                                    .foregroundStyle(AppColors.rejoyOrange)
-                            }
-                            Image(systemName: "chevron.right")
-                                .font(AppFont.rounded(size: 16, weight: .medium))
-                                .foregroundStyle(AppColors.trailing)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    ProfileRowDivider()
-                    NavigationLink {
-                        AppLanguageView()
-                    } label: {
-                        SettingsRow(
-                            icon: "globe",
-                            title: L.string("app_language", language: appLanguageStorage),
-                            trailingValue: AppLanguage(rawValue: appLanguageStorage)?.displayName ?? "System"
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    ProfileRowDivider()
-                    NavigationLink {
-                        SettingsPermissionsView(
-                            micStatus: $micStatus,
-                            speechStatus: $speechStatus,
-                            notificationStatus: $notificationStatus,
-                            onRefresh: refreshPermissionStatus
-                        )
-                    } label: {
-                        SettingsRow(icon: "hand.raised.fill", title: L.string("permissions", language: appLanguageStorage))
-                    }
-                    .buttonStyle(.plain)
-                    ProfileRowDivider()
-                    NavigationLink {
-                        SettingsVoiceView(recognitionLocale: $recognitionLocale)
-                    } label: {
-                        SettingsRow(icon: "waveform", title: L.string("voice", language: appLanguageStorage))
-                    }
-                    .buttonStyle(.plain)
-                    ProfileRowDivider()
-                    NavigationLink {
-                        SettingsActivityTypesView(
-                            activityToDelete: $activityToDelete,
-                            activityToEdit: $activityToEdit,
-                            showAddActivity: $showAddActivity
-                        )
-                    } label: {
-                        SettingsRow(icon: "list.bullet", title: L.string("activity_types", language: appLanguageStorage))
-                    }
-                    .buttonStyle(.plain)
+            ProfileSectionHeader(title: L.string("support_section", language: appLanguageStorage))
+            supportGuideList
+            supportContactBlock
+        }
+    }
+
+    /// Thumbnail width + `HStack` spacing — divider starts where the title text begins (iOS grouped list style).
+    private var supportGuideDividerLeadingInset: CGFloat { 82 + 12 }
+
+    private var supportGuideList: some View {
+        ProfileCard {
+            VStack(spacing: 0) {
+                supportGuideRow(
+                    imageName: "HowToUseRejoyCover",
+                    title: L.string("how_to_use_rejoy", language: appLanguageStorage),
+                    subtitle: L.string("how_to_use_rejoy_explainer", language: appLanguageStorage)
+                ) {
+                    showHowToUseRejoyCarousel = true
+                }
+                supportGuideInsetDivider
+                supportGuideRow(
+                    imageName: "HowToMeditate",
+                    title: L.string("how_to_meditate", language: appLanguageStorage),
+                    subtitle: L.string("accumulating_sheet_explainer", language: appLanguageStorage)
+                ) {
+                    showRejoyMeditationCarousel = true
+                }
+                supportGuideInsetDivider
+                supportGuideRow(
+                    imageName: "WhatAreSeeds",
+                    title: L.string("what_is_seeds", language: appLanguageStorage),
+                    subtitle: L.string("what_is_seeds_explainer", language: appLanguageStorage)
+                ) {
+                    showSeedsInfoCarousel = true
                 }
             }
         }
     }
 
-    private var accountCard: some View {
-        NavigationLink {
-            SettingsAccountView()
+    private var supportGuideInsetDivider: some View {
+        HStack(spacing: 0) {
+            Color.clear
+                .frame(width: supportGuideDividerLeadingInset)
+            Rectangle()
+                .fill(AppColors.rowDivider)
+                .frame(height: 1.0 / max(UIScreen.main.scale, 1))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func supportGuideRow(imageName: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
         } label: {
-            HStack {
-                Text(L.string("account", language: appLanguageStorage))
-                    .font(AppFont.rounded(size: 18, weight: .regular))
-                    .foregroundStyle(.primary)
-                Spacer()
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 17)
+                        .fill(AppColors.cardBackground)
+                        .frame(width: 82, height: 105)
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 82, height: 105)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(AppFont.rounded(size: 20, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(AppFont.rounded(size: 14, weight: .regular))
+                        .foregroundStyle(AppColors.sectionHeader)
+                        .lineLimit(2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right")
-                    .font(AppFont.rounded(size: 14, weight: .semibold))
+                    .font(AppFont.rounded(size: 16, weight: .medium))
                     .foregroundStyle(AppColors.trailing)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
-        .background(AppColors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 30))
+    }
+
+    private var supportContactBlock: some View {
+        VStack(spacing: 16) {
+            Text(L.string("support_contact_intro", language: appLanguageStorage))
+                .font(AppFont.rounded(size: 14, weight: .regular))
+                .foregroundStyle(AppColors.sectionHeader)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity)
+            HStack(spacing: 12) {
+                supportContactOutlineButton(
+                    icon: "envelope.fill",
+                    title: L.string("support_contact_email", language: appLanguageStorage)
+                ) {
+                    openURL(SupportContact.emailURL)
+                }
+                supportContactOutlineButton(
+                    icon: "paperplane.fill",
+                    title: L.string("support_contact_telegram", language: appLanguageStorage)
+                ) {
+                    openURL(SupportContact.telegramURL)
+                }
+            }
+            .padding(.horizontal, 28)
+        }
+        .padding(.top, 20)
+        .padding(.bottom, 12)
+    }
+
+    private func supportContactOutlineButton(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(AppFont.rounded(size: 16, weight: .semibold))
+                Text(title)
+                    .font(AppFont.rounded(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(AppColors.rejoyOrange)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppColors.rejoyOrange.opacity(0.45), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var profileFooter: some View {
@@ -744,310 +566,7 @@ struct SettingsView: View {
                 .foregroundStyle(AppColors.sectionHeader)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-    }
-
-    private var appLanguageSection: some View {
-        Section {
-            Picker(L.string("language", language: appLanguageStorage), selection: $appLanguageStorage) {
-                Text("System").tag("")
-                Text("English").tag("en")
-                Text("Русский").tag("ru")
-                Text("Українська").tag("uk")
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        } header: {
-            Text(L.string("app_language", language: appLanguageStorage))
-        } footer: {
-            Text(L.string("language_description", language: appLanguageStorage))
-        }
-    }
-
-    private var rejoyMeditationSection: some View {
-        Section {
-            Toggle(L.string("rejoy_meditation_enable", language: appLanguageStorage), isOn: $meditationEnabled)
-                .tint(AppColors.rejoyOrange)
-                .listRowBackground(AppColors.listRowBackground)
-            if meditationEnabled {
-                DatePicker("", selection: $meditationTime, displayedComponents: .hourAndMinute)
-                    .listRowBackground(AppColors.listRowBackground)
-            }
-            Button(L.string("learn_more_rejoy_meditation", language: appLanguageStorage)) {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showRejoyMeditationCarousel = true
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        } header: {
-            Text(L.string("rejoy_meditation_time", language: appLanguageStorage))
-        } footer: {
-            Text(L.string("rejoy_meditation_description", language: appLanguageStorage))
-        }
-    }
-
-    private var permissionsSection: some View {
-        Section(L.string("permissions", language: appLanguageStorage)) {
-            PermissionStatusRow(
-                title: L.string("microphone", language: appLanguageStorage),
-                message: L.string("record_voice", language: appLanguageStorage),
-                icon: "mic.fill",
-                status: micStatus,
-                language: appLanguageStorage
-            ) {
-                requestMicPermission()
-            }
-            .listRowBackground(AppColors.listRowBackground)
-            PermissionStatusRow(
-                title: L.string("speech_recognition", language: appLanguageStorage),
-                message: L.string("transcribe_dedication", language: appLanguageStorage),
-                icon: "waveform",
-                status: speechStatus,
-                language: appLanguageStorage
-            ) {
-                requestSpeechPermission()
-            }
-            .listRowBackground(AppColors.listRowBackground)
-            PermissionStatusRow(
-                title: L.string("notifications", language: appLanguageStorage),
-                message: L.string("daily_reminder", language: appLanguageStorage),
-                icon: "bell.fill",
-                status: notificationStatus,
-                language: appLanguageStorage
-            ) {
-                requestNotificationPermission()
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        }
-    }
-
-    private var recognitionLanguageSection: some View {
-        Section {
-            Picker(L.string("recognition_language", language: appLanguageStorage), selection: $recognitionLocale) {
-                Text(L.string("automatic_russian", language: appLanguageStorage)).tag("")
-                Text(L.string("russian", language: appLanguageStorage)).tag("ru-RU")
-                Text(L.string("english", language: appLanguageStorage)).tag("en-US")
-                Text(L.string("ukrainian", language: appLanguageStorage)).tag("uk-UA")
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        } header: {
-            Text(L.string("voice", language: appLanguageStorage))
-        } footer: {
-            Text(L.string("voice_footer", language: appLanguageStorage))
-        }
-    }
-
-    private var seedsSection: some View {
-        Section {
-            HStack {
-                Text(L.string("seeds_per_second", language: appLanguageStorage))
-                Spacer()
-                Text("\(AppSettings.seedsPerSecond)")
-                    .foregroundStyle(AppColors.dotsSecondaryText)
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        } header: {
-            Text(L.string("seeds", language: appLanguageStorage))
-        } footer: {
-            Text(L.string("seeds_description", language: appLanguageStorage))
-        }
-    }
-
-    private var hiddenActivityIds: Set<UUID> {
-        Set(hiddenActivityTypeIdsRaw.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
-    }
-
-    private var visibleActivities: [ActivityType] {
-        activityTypes.filter { !hiddenActivityIds.contains($0.id) }
-    }
-
-    private var hiddenActivities: [ActivityType] {
-        activityTypes.filter { hiddenActivityIds.contains($0.id) }
-    }
-
-    private var activityTypesSection: some View {
-        Section(L.string("activity_types", language: appLanguageStorage)) {
-            ForEach(visibleActivities) { activity in
-                HStack {
-                    Image(systemName: activity.symbolName)
-                        .foregroundStyle(AppColors.rejoyOrange)
-                        .frame(width: 28)
-                    Text(L.activityName(activity.name, language: appLanguageStorage))
-                    if activity.isBuiltIn || Self.builtInNames.contains(activity.name) {
-                        Text(L.string("default", language: appLanguageStorage))
-                            .font(AppFont.caption2)
-                            .foregroundStyle(AppColors.dotsSecondaryText)
-                    }
-                    Spacer()
-                    if !activity.isBuiltIn && !Self.builtInNames.contains(activity.name) {
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            activityToEdit = activity
-                        } label: {
-                            Image(systemName: "pencil")
-                                .font(AppFont.body)
-                                .foregroundStyle(AppColors.dotsSecondaryText)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        activityToDelete = activity
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(AppFont.body)
-                            .foregroundStyle(AppColors.dotsSecondaryText)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .listRowBackground(AppColors.listRowBackground)
-            }
-            .onMove(perform: moveActivities)
-            Button(L.string("add_activity", language: appLanguageStorage)) {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showAddActivity = true
-            }
-            .listRowBackground(AppColors.listRowBackground)
-        }
-        .onAppear {
-            ActivityType.seedDefaultActivitiesIfNeeded(modelContext: modelContext)
-        }
-    }
-
-    private var restoreActivitiesSection: some View {
-        Group {
-            if !hiddenActivities.isEmpty {
-                Section {
-                    ForEach(hiddenActivities) { activity in
-                        HStack {
-                            Image(systemName: activity.symbolName)
-                                .foregroundStyle(AppColors.dotsSecondaryText)
-                                .frame(width: 28)
-                            Text(L.activityName(activity.name, language: appLanguageStorage))
-                            Spacer()
-                            Button(L.string("restore_activity", language: appLanguageStorage)) {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                var ids = hiddenActivityIds
-                                ids.remove(activity.id)
-                                hiddenActivityTypeIdsRaw = ids.map(\.uuidString).joined(separator: ",")
-                            }
-                            .foregroundStyle(AppColors.rejoyOrange)
-                        }
-                        .listRowBackground(AppColors.listRowBackground)
-                    }
-                }
-            }
-        }
-    }
-
-    private var aboutSection: some View {
-        Section(L.string("about", language: appLanguageStorage)) {
-            HStack {
-                Text(L.string("rej", language: appLanguageStorage))
-                Spacer()
-                Text(L.string("version", language: appLanguageStorage))
-                    .foregroundStyle(AppColors.dotsSecondaryText)
-            }
-            .listRowBackground(AppColors.listRowBackground)
-            Text(L.string("about_description", language: appLanguageStorage))
-                .font(AppFont.caption)
-                .foregroundStyle(AppColors.dotsSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-            .listRowBackground(AppColors.listRowBackground)
-        }
-    }
-
-    private func saveDisplayName() {
-        let trimmed = displayNameText.trimmingCharacters(in: .whitespacesAndNewlines)
-        ProfileState.displayName = trimmed.isEmpty ? nil : trimmed
-        if supabaseService.isSignedIn {
-            Task {
-                try? await SupabaseService.shared.upsertProfileDisplayName(ProfileState.displayName)
-            }
-        }
-    }
-
-    private func refreshPermissionStatus() {
-        micStatus = PermissionStatus.fromAVAudio(AVAudioSession.sharedInstance().recordPermission)
-        speechStatus = PermissionStatus.fromSpeech(SFSpeechRecognizer.authorizationStatus())
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                notificationStatus = PermissionStatus.fromNotification(settings.authorizationStatus)
-            }
-        }
-    }
-
-    private func loadProfileVisibilityState() async {
-        guard supabaseService.isSignedIn else {
-            await MainActor.run {
-                profileVisibilityIsVisible = nil
-                profileVisibilityTrailingValue = ""
-            }
-            return
-        }
-        do {
-            let sangha = try await SanghaService.shared.fetchMySangha()
-            let membership = try await SanghaService.shared.fetchMyMembership()
-            await MainActor.run {
-                if let sangha = sangha, let m = membership {
-                    profileVisibilityIsVisible = m.isVisible
-                    profileVisibilityTrailingValue = m.isVisible ? L.string("public", language: appLanguageStorage) : L.string("private", language: appLanguageStorage)
-                } else {
-                    profileVisibilityIsVisible = nil
-                    profileVisibilityTrailingValue = L.string("private", language: appLanguageStorage)
-                }
-            }
-        } catch {
-            await MainActor.run {
-                profileVisibilityIsVisible = nil
-                profileVisibilityTrailingValue = L.string("private", language: appLanguageStorage)
-            }
-        }
-    }
-
-    private func requestMicPermission() {
-        AVAudioSession.sharedInstance().requestRecordPermission { _ in
-            DispatchQueue.main.async {
-                refreshPermissionStatus()
-            }
-        }
-    }
-
-    private func requestSpeechPermission() {
-        SFSpeechRecognizer.requestAuthorization { _ in
-            DispatchQueue.main.async {
-                refreshPermissionStatus()
-            }
-        }
-    }
-
-    private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in
-            DispatchQueue.main.async {
-                refreshPermissionStatus()
-            }
-        }
-    }
-
-    private static let builtInNames = ["Meditation", "Yoga", "Walking", "Running", "Work", "Cooking", "Reading", "Family", "Study"]
-
-    private func performDelete(_ activity: ActivityType) {
-        let isBuiltIn = activity.isBuiltIn || Self.builtInNames.contains(activity.name)
-        if isBuiltIn {
-            var ids = hiddenActivityIds
-            ids.insert(activity.id)
-            hiddenActivityTypeIdsRaw = ids.map(\.uuidString).joined(separator: ",")
-        } else {
-            modelContext.delete(activity)
-        }
-        try? modelContext.save()
-    }
-
-    private func moveActivities(from source: IndexSet, to destination: Int) {
-        var reordered = visibleActivities
-        reordered.move(fromOffsets: source, toOffset: destination)
-        for (index, activity) in reordered.enumerated() {
-            activity.sortOrder = index
-        }
-        try? modelContext.save()
+        .padding(.top, 4)
     }
 }
 

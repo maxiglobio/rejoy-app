@@ -24,6 +24,8 @@ enum AppFont {
 enum AppColors {
     /// Rejoy brand orange — #FE7302. Use everywhere for accent/orange UI.
     static let rejoyOrange = Color(red: 254/255, green: 115/255, blue: 2/255)
+    /// Solid darker orange for pressed state (avoids default button opacity revealing views below, e.g. tab bar slot).
+    static let rejoyOrangePressed = Color(red: 230/255, green: 102/255, blue: 0/255)
     static let rejoyOrangeUIColor = UIColor(red: 254/255, green: 115/255, blue: 2/255, alpha: 1)
 
     // MARK: - Dots Platform design tokens (from Figma). Adaptive for dark mode.
@@ -81,6 +83,15 @@ enum AppColors {
                 return UIColor(red: 0.56, green: 0.56, blue: 0.58, alpha: 1)  // #8E8E93
             }
             return UIColor(red: 161/255, green: 161/255, blue: 166/255, alpha: 1)
+        }))
+    }
+    /// “Rejoy in …” countdown pill border (Figma Dots — #DEDCDA, 1pt).
+    static var dotsRejoyCountdownPillBorder: Color {
+        Color(uiColor: UIColor(dynamicProvider: { traitCollection in
+            if traitCollection.userInterfaceStyle == .dark {
+                return UIColor(white: 1, alpha: 0.14)
+            }
+            return UIColor(red: 222/255, green: 220/255, blue: 218/255, alpha: 1)  // #DEDCDA
         }))
     }
     static var dotsRejoyPillBg: Color {

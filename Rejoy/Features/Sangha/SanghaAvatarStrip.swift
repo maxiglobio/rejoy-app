@@ -136,11 +136,11 @@ private struct SanghaAvatarButton: View {
     private var placeholderCircle: some View {
         ZStack {
             Circle()
-                .fill(hasActivityToday ? AppColors.rejoyOrange.opacity(0.3) : AppColors.rejoyOrange.opacity(0.2))
+                .fill(hasActivityToday ? AppColors.secondaryFill.opacity(0.92) : AppColors.secondaryFill.opacity(0.75))
                 .frame(width: innerSize, height: innerSize)
             Text(memberInitials)
                 .font(AppFont.rounded(size: innerSize * 0.4, weight: .semibold))
-                .foregroundStyle(AppColors.rejoyOrange)
+                .foregroundStyle(hasActivityToday ? AppColors.sectionHeader : AppColors.trailing)
         }
     }
 

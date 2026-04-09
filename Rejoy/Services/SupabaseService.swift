@@ -18,6 +18,9 @@ final class SupabaseService: ObservableObject {
     @Published private(set) var isSignedIn: Bool
     @Published private(set) var planType: PlanType = .free
     @Published private(set) var teacherPortraitURL: String?
+    /// Bumps on each successful altar upload so views refresh even when the storage path / public URL string is unchanged (same `uuid.jpg`).
+    @Published private(set) var teacherPortraitRevision: Int = 0
+    @Published private(set) var altarEnabled: Bool = false
 
     private init() {
         isSignedIn = client.auth.currentSession != nil
@@ -26,16 +29,6 @@ final class SupabaseService: ObservableObject {
     var currentUserId: UUID? {
         guard let id = client.auth.currentUser?.id else { return nil }
         return UUID(uuidString: id.uuidString)
-    }
-
-    /// Deep feature (Altar, upgrade) is available only for specific users.
-    private static let deepAllowedUserIds: Set<UUID> = [
-        UUID(uuidString: "1fc38daa-8ab5-4f9c-b265-fb0b0ba57c86")!,
-        UUID(uuidString: "7885a7c7-e2d9-4a98-a9e5-9abef28dbe2e")!
-    ]
-    var isDeepFeatureAvailable: Bool {
-        guard let userId = currentUserId else { return false }
-        return Self.deepAllowedUserIds.contains(userId)
     }
 
     // MARK: - Auth: Sign in with Apple
@@ -65,6 +58,8 @@ final class SupabaseService: ObservableObject {
         isSignedIn = false
         planType = .free
         teacherPortraitURL = nil
+        teacherPortraitRevision = 0
+        altarEnabled = false
     }
 
     /// Permanently deletes the authenticated user in Supabase (`auth.users` and cascaded rows). Requires RPC `delete_my_account` in the project SQL migrations.
@@ -74,6 +69,8 @@ final class SupabaseService: ObservableObject {
         isSignedIn = false
         planType = .free
         teacherPortraitURL = nil
+        teacherPortraitRevision = 0
+        altarEnabled = false
         try? await client.auth.signOut()
     }
 
@@ -302,6 +299,8 @@ final class SupabaseService: ObservableObject {
         guard let userId = currentUserId else {
             planType = .free
             teacherPortraitURL = nil
+            teacherPortraitRevision = 0
+            altarEnabled = false
             return
         }
         do {
@@ -314,6 +313,7 @@ final class SupabaseService: ObservableObject {
             if let profile = rows.first {
                 planType = PlanType(rawValue: profile.planType) ?? .free
                 teacherPortraitURL = profile.teacherPortraitUrl
+                altarEnabled = profile.altarEnabled
                 if let name = profile.displayName, !name.isEmpty, ProfileState.displayName == nil {
                     ProfileState.displayName = name
                 }
@@ -333,11 +333,32 @@ final class SupabaseService: ObservableObject {
             } else {
                 planType = .free
                 teacherPortraitURL = nil
+                teacherPortraitRevision = 0
+                altarEnabled = false
             }
         } catch {
             planType = .free
             teacherPortraitURL = nil
+            teacherPortraitRevision = 0
+            altarEnabled = false
         }
+    }
+
+    /// Persists altar visibility on Profile tab (Settings toggle).
+    func setAltarEnabled(_ enabled: Bool) async throws {
+        guard let userId = currentUserId else { return }
+        let existing: [ProfileRow] = try await client.from("profiles").select().eq("id", value: userId.uuidString.lowercased()).execute().value
+        let row = ProfileRow(
+            id: userId,
+            planType: existing.first?.planType ?? planType.rawValue,
+            teacherPortraitUrl: existing.first?.teacherPortraitUrl ?? teacherPortraitURL,
+            avatarUrl: existing.first?.avatarUrl,
+            displayName: existing.first?.displayName ?? ProfileState.displayName,
+            altarEnabled: enabled,
+            updatedAt: Date()
+        )
+        try await client.from("profiles").upsert(row, onConflict: "id").execute()
+        altarEnabled = enabled
     }
 
     /// Fetches profiles for the given user IDs (e.g. Sangha members). Requires RLS allowing Sangha members to read each other.
@@ -364,6 +385,7 @@ final class SupabaseService: ObservableObject {
             teacherPortraitUrl: teacherPortraitURL,
             avatarUrl: existingAvatar,
             displayName: existing.first?.displayName ?? ProfileState.displayName,
+            altarEnabled: existing.first.map(\.altarEnabled) ?? false,
             updatedAt: Date()
         )
         try await client
@@ -395,6 +417,7 @@ final class SupabaseService: ObservableObject {
             teacherPortraitUrl: teacherPortraitURL,
             avatarUrl: urlString,
             displayName: ProfileState.displayName,
+            altarEnabled: altarEnabled,
             updatedAt: Date()
         )
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
@@ -416,10 +439,41 @@ final class SupabaseService: ObservableObject {
             teacherPortraitUrl: urlString,
             avatarUrl: existing.first?.avatarUrl,
             displayName: existing.first?.displayName ?? ProfileState.displayName,
+            altarEnabled: existing.first?.altarEnabled ?? altarEnabled,
             updatedAt: Date()
         )
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
         teacherPortraitURL = urlString
+        teacherPortraitRevision += 1
+    }
+
+    /// Object path inside `bucket` parsed from a Supabase Storage public or signed URL (e.g. `uuid.jpg`, `avatars/uuid.jpg`).
+    private static func storageObjectPathInBucket(from urlString: String, bucket: String) -> String? {
+        guard let url = URL(string: urlString) else { return nil }
+        let path = url.path
+        let needle = "/\(bucket)/"
+        guard let range = path.range(of: needle) else { return nil }
+        let sub = String(path[range.upperBound...]).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !sub.isEmpty else { return nil }
+        return sub.removingPercentEncoding ?? sub
+    }
+
+    /// URL for loading altar media. Uses a **signed** URL so `AsyncImage` / `AVPlayer` work when the bucket is not public (anonymous `GET` on the public URL would fail).
+    func resolvedTeacherMediaURL() async -> URL? {
+        guard let raw = teacherPortraitURL?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty else { return nil }
+        if let path = Self.storageObjectPathInBucket(from: raw, bucket: "teacher-portraits") {
+            do {
+                return try await client.storage
+                    .from("teacher-portraits")
+                    .createSignedURL(path: path, expiresIn: 3600)
+            } catch {
+                #if DEBUG
+                print("[Rejoy] teacher portrait signed URL failed: \(error); trying stored URL")
+                #endif
+            }
+        }
+        return URL(string: raw)
     }
 
     /// Saves the APNs device token to profiles for remote push (e.g. nudge notifications).
@@ -454,6 +508,7 @@ final class SupabaseService: ObservableObject {
             teacherPortraitUrl: existing.first?.teacherPortraitUrl,
             avatarUrl: existing.first?.avatarUrl,
             displayName: name,
+            altarEnabled: existing.first?.altarEnabled ?? altarEnabled,
             updatedAt: Date()
         )
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
@@ -670,6 +725,7 @@ struct ProfileRow: Codable {
     var teacherPortraitUrl: String?
     var avatarUrl: String?
     var displayName: String?
+    var altarEnabled: Bool
     var updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -678,7 +734,40 @@ struct ProfileRow: Codable {
         case teacherPortraitUrl = "teacher_portrait_url"
         case avatarUrl = "avatar_url"
         case displayName = "display_name"
+        case altarEnabled = "altar_enabled"
         case updatedAt = "updated_at"
+    }
+
+    init(id: UUID, planType: String, teacherPortraitUrl: String?, avatarUrl: String?, displayName: String?, altarEnabled: Bool, updatedAt: Date) {
+        self.id = id
+        self.planType = planType
+        self.teacherPortraitUrl = teacherPortraitUrl
+        self.avatarUrl = avatarUrl
+        self.displayName = displayName
+        self.altarEnabled = altarEnabled
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        planType = try c.decode(String.self, forKey: .planType)
+        teacherPortraitUrl = try c.decodeIfPresent(String.self, forKey: .teacherPortraitUrl)
+        avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
+        displayName = try c.decodeIfPresent(String.self, forKey: .displayName)
+        altarEnabled = try c.decodeIfPresent(Bool.self, forKey: .altarEnabled) ?? false
+        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(planType, forKey: .planType)
+        try c.encodeIfPresent(teacherPortraitUrl, forKey: .teacherPortraitUrl)
+        try c.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
+        try c.encodeIfPresent(displayName, forKey: .displayName)
+        try c.encode(altarEnabled, forKey: .altarEnabled)
+        try c.encode(updatedAt, forKey: .updatedAt)
     }
 }
 
